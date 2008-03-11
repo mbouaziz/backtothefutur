@@ -1,0 +1,69 @@
+Projet Systèmes numériques et circuits 
+Mathieu Barbin, Mehdi Bouaziz
+
+L'idée générale : Pêle-Mêle
+
+Faire tourner sur un vrai 4004 un programme qui lit un code source
+assembleur de SubLeq, et l'execute.
+
+L'objectif qu'on peut se donner est par exemple de résoudre les
+minis-problemes de Mario-ENS (pyramides, nombres magiques, etc...) avec un
+code en SubLeq sur le 4004.
+
+
+Composants du projet (certains sont très courts, d'autres moins...)
+
+Simulateurs :
+
+KISS : Kiss Is a SubLeq Simulator
+
+c'est un programme écrit en soft (C, ML, etc... ?) qui lit un code
+assembleur SL, et qui l'execute. 
+
+
+LB4S : Let LB4S Be a 4004 Simulator
+
+C'est un programme écrit en soft (C, ML, etc.. ?) qui lit un code
+assembleur 4004, et simule l'execution.
+Penser à Intégrer les frères du 4004 dans le simulateur (principalement,
+entrées sorties, RAM ? etc...) 
+Autre possiblité : Ecrire un applet pour Prothéus pour 4004.
+
+
+Code sources Assembleurs :
+
+SLreader.asm : 
+
+C'est un code source ASM-4004 qui lit un code source ASM-SL et qui simule
+l'execution de celui-ci.
+Le but etant : 
+Arriver a faire tourner ce code sur LB4S, et en vrai aussi accessoirement...
+
+Pyramide.asm, et compagnie (nombres magiques, etc...) : 
+
+C'est un code source ASM-SL qui resout le probleme des pyramides. 
+Le but étant : 
+Faire tourner ce code sur KISS, sur HASM, et bien sûr, sur SLreader qui
+tourne sur LB4S, et enfin sur SLreader qui tourne sur un vrai 4004. 
+
+Architecture Hardware.
+
+HASM : Hadware Architecture for a SubLeq Machine
+
+Il s'agit d'un circuit. C'est le micro-processeur Subleq. 
+Sa conception est facultative étant donné l'objectif fixé, mais allons, ca
+ne mange pas de pain.
+Plusieurs possibilités pour réaliser ce circuit : 
+Prothéus, CM2000, un code source des langages de nos simulateurs du 1er
+semestre, VHDL, etc...
+
+On peut alors utiliser ce circuit pour tester nos différents Mario-asm. 
+
+
+Compilation : 
+
+On peut aussi vouloir que les Mario-ASM ne soient pas écrits à la main,
+mais dans un mini-langage, que l'on compile vers de l'ASM-SL.
+
+
+Autres : etc ... à voir....
