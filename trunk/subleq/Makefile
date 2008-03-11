@@ -8,3 +8,7 @@ testUnit.cmx : testUnit.ml
 clean : 
 	rm -f *.cmo *.cmi *.cmx *.o
 	rm -f runtestunit
+clean_exe :
+	rm -f runtestunit
+test : runtestunit
+	./runtestunit
