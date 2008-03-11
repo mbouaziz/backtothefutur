@@ -112,7 +112,7 @@ end
 (** Test unitaire pour le module de in.out bit a bit *)
 (* =============================================================== *)
 let test_unitaire_module_Bit () =
-  let file = "test01" in
+  let file = "bitreaderunittest01" in
   let nombre_tests = 200 in
   for i = 0 to nombre_tests do
     let len = 100 + (Random.int 100) in
