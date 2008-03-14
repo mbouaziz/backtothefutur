@@ -1,0 +1,75 @@
+<html><head>
+
+<meta http-equiv="content-type" content="text/html; charset=iso-8859-15">
+<meta http-equiv="imagetoolbar" content="no"><title>Intel 4004 disassembler</title>
+
+<meta name="description" content="A JavaScript disassembler for the Intel 4004 CPU">
+<meta name="keywords" content="Intel 4004 disassembler, i4004 disassembler, JavaScript, olbits.eu"><!--
+  Intel 4004 disassembler in JavaScript
+  by Maciej Szyc (cosmac'at'szyc.org)
+  December 2006, Swidnica, Poland.
+
+  This program is free software; you can redistribute it and/or modify it under the terms of version 2
+  of the GNU General Public License as published by the Free Software Foundation.
+  This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+  without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+  See the GNU General Public License for more details.  http://www.gnu.org/
+-->
+
+
+
+<script language="JavaScript" type="text/javascript" src="dasm_fichiers/4004dis.js"></script>
+
+<link rel="stylesheet" href="dasm_fichiers/style.css" type="text/css"></head><body topmargin="0" leftmargin="0" rightmargin="0" bottommargin="0" style="border: 0pt none ;" alink="#bb0000" bgcolor="#a7a7a7" link="#d4dce5" marginheight="0" marginwidth="0" text="#ffffff" vlink="#d4dce5">
+
+<br>
+<center>
+<!-- TABLE -->
+<table border="0" cellpadding="0" cellspacing="0" width="490">
+	<tbody><tr valign="top">
+	<td align="left">
+	<b>Intel 4004 Microprocessor Disassembler</b>
+	</td>
+	<td align="right"><form name="home">
+	<input value="home" class="isButton" onclick="self.location.href=('index.html')" type="button">
+	</form></td>
+	</tr>
+</tbody></table>
+
+<!-- disass -->
+	<table border="0" cellpadding="0" cellspacing="5">
+	<form name="disass" onsubmit="return false"></form>
+	<tbody><tr valign="top">
+	<td class="disp1">code:</td>
+	<td class="disp1">disassembly:</td>
+	</tr>
+	<tr valign="top">
+	<td><textarea name="codefield" class="formField" rows="20" cols="24" wrap="virtual"></textarea></td>
+	<td><textarea name="listing" class="formField" rows="20" cols="30" wrap="virtual" readonly="readonly"></textarea></td>
+	</tr>
+	<tr valign="top">
+	<td><table border="0" cellpadding="2" cellspacing="0">
+		<tbody><tr valign="middle">
+		<td class="disp1" align="right" nowrap="nowrap">opcode starts at:</td>
+		<td><input name="codeAddr" size="3" class="formField" value="000" onchange="this.form.startAddr.value=this.value" type="text"></td>
+		<td class="disp1" align="right" nowrap="nowrap">H</td>
+		</tr>
+		<tr valign="middle">
+		<td class="disp1" align="right" nowrap="nowrap">disassemble from:</td>
+		<td><input name="startAddr" size="3" class="formField" value="000" type="text"></td>
+		<td class="disp1" align="right" nowrap="nowrap">H</td>
+		</tr>
+		<tr valign="middle">
+		<td class="disp1" align="right" nowrap="nowrap">to:</td>
+		<td><input name="stopAddr" size="3" class="formField" value="000" type="text"></td>
+		<td class="disp1" align="right" nowrap="nowrap">H</td>
+		</tr>
+		</tbody></table></td>
+	<td align="right"><input value="disassemble" onclick="disassemble()" class="isButton" type="button"></td>
+	</tr>
+	
+	</tbody></table>
+
+<!-- /disass -->
+
+</center></body></html>

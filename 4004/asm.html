@@ -1,0 +1,289 @@
+<html><head>
+
+<meta http-equiv="content-type" content="text/html; charset=iso-8859-15">
+<meta http-equiv="imagetoolbar" content="no"><title>Intel 4004 assembler</title>
+
+<meta name="description" content="A JavaScript assembler for the Intel 4004 CPU">
+<meta name="keywords" content="Intel 4004 assembler, i4004 assembler, JavaScript, olbits.eu"><!--
+  Intel 4004 assembler in JavaScript
+  by Maciej Szyc (e4004'at'szyc.org)
+  February 2007, Swidnica, Poland.
+
+  This program is free software; you can redistribute it and/or modify it under the terms of version 2
+  of the GNU General Public License as published by the Free Software Foundation.
+  This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+  without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+  See the GNU General Public License for more details.  http://www.gnu.org/
+-->
+
+
+
+
+<script language="JavaScript" type="text/javascript" src="asm_fichiers/4004asm.js"></script>
+<link rel="stylesheet" href="asm_fichiers/style.css" type="text/css"></head><body topmargin="0" leftmargin="0" rightmargin="0" bottommargin="0" style="border: 0pt none ;" alink="#bb0000" bgcolor="#a7a7a7" link="#d4dce5" marginheight="0" marginwidth="0" text="#ffffff" vlink="#d4dce5">
+
+<br>
+<center>
+<!-- TABLE -->
+<table border="0" cellpadding="0" cellspacing="0" width="700">
+	<tbody><tr valign="top">
+	<td align="left">
+	<b>Intel 4004 Microprocessor Assembler</b>
+	</td>
+	<td align="right"><form name="home">
+	<input value="home" class="isButton" onclick="self.location.href=('index.html')" type="button">
+	</form></td>
+	</tr>
+</tbody></table>
+
+<!-- ass -->
+	<table border="0" cellpadding="0" cellspacing="7">
+	<form name="ass" onsubmit="return false"></form>
+	<tbody><tr valign="top">
+	<td colspan="2" class="disp1">source code:</td>
+	<td class="disp1">object code:</td>
+	</tr>
+	<tr valign="top">
+	<td colspan="2"><textarea name="srcfield" class="formField" rows="12" cols="56" wrap="virtual"></textarea></td>
+	<td rowspan="4"><textarea name="codefield" class="formField" rows="24" cols="24" wrap="virtual" readonly="readonly"></textarea></td>
+	</tr>
+	<tr valign="bottom">
+	<td align="left"><div id="dispNo" class="disp1">listing: $000</div></td>
+	<td align="right"><input value="generate code" onclick="assemble()" class="isButton" type="button"></td>
+	</tr>
+	<tr valign="bottom">
+	<td colspan="2"><textarea name="listing" class="formField" rows="8" cols="56" wrap="virtual" readonly="readonly"></textarea></td>
+	</tr>
+	</tbody></table>
+
+<!-- /ass -->
+<br>
+<table border="0" cellpadding="0" cellspacing="0" width="700">
+ <tbody><tr><td class="title">What Is The as4004 Assembler?</td></tr></tbody></table>
+<table border="0" cellpadding="0" cellspacing="0" width="640">
+ <tbody><tr><td class="tekst2">
+The as4004 assembler is a very simple 2 pass assembler of the Intel
+4004 microprocessor. The full code of this software is completely
+written in JavaScript, so it should be able to execute on whatever
+platform with the internet browser and implemented JavaScript
+interpreter. </td></tr>
+</tbody></table>
+<br>
+<table border="0" cellpadding="0" cellspacing="0" width="700">
+ <tbody><tr><td class="title">Features Of The as4004 Assembler</td></tr>
+</tbody></table>
+<ul>
+  <li>Intuitive 3 pannels user interface.</li>
+  <li>Minimum system requirements are internet browser with JavaScript interpreter.</li>
+  <li>The as4004 assembler produces hex format code.</li>
+  <li>Object code can be used in <a href="http://e4004.szyc.org/index.html">e4004</a> emulator or <a href="http://e4004.szyc.org/dasm.html">disassembler</a>.</li>
+  <li>Global label structure.</li>
+  <li>Possibility of input data in various number format.</li>
+  <li>Comments are available.</li>
+  <li>The assembler is completely free.</li>
+</ul>
+<br>
+<table border="0" cellpadding="0" cellspacing="0" width="700">
+ <tbody><tr><td class="title">Running The as4004 Assembler</td></tr>
+</tbody></table>
+<ul>
+  <li>Enter your code in the "source code" pannel.</li>
+  <li>Click the "generate code" button.</li>
+  <li>In the title of "listing" pannel the progress of compilation process can be tracking.</li>
+  <li>In the "listing" pannel the compilation process can be checked.</li>
+  <li>After the end of the process the alert windows will inform about the result of compilation.</li>
+  <li>If failed, the source can be edited in the "source code" pannel.</li>
+  <li>Generated code from the "object code" pannel in HEX format is ready to use.</li>
+</ul>
+<br>
+<table border="0" cellpadding="0" cellspacing="0" width="700">
+ <tbody><tr><td class="title">Quick Start</td></tr></tbody></table>
+<table border="0" cellpadding="0" cellspacing="0" width="640">
+ <tbody><tr><td class="tekst2">
+This part of the desription is for those of you who want to see the
+as4004 assembler in action. It can be easy to realize. In the frame
+bellow is a simple examle of Intel 4004 microprocessor program - adding
+two 4bit numbers. The FIM instruction is used to initialize the pair of
+registers R0=2 and R1=A. The program then loads R0 into the
+accumulator, adds the contents of R1 to the accumulator, and then uses
+the XCH instruction to exchange the values of R1 and the accumulator,
+which stores the addition result into R1. The program then enters an
+endless loop, written as a JUN (jump unconditional) instruction that
+jumps to its own address. Just copy this code and paste it into the
+"source code" pannel. Next click the "generate code" button. If
+everything goes right in "object code" pannel should appears the result
+code in HEX format. </td></tr>
+</tbody></table>
+<br>
+<table border="1" cellpadding="5" cellspacing="0" width="600">
+ <tbody><tr><td class="code">
+<pre>; add two 4bit numbers on the Intel 4004
+;
+	FIM P0, $A2	; initialize: R0=2 R1=A
+	LD R0		; load R0 into accumulator
+	ADD R1		; add R1 into accumulator
+	XCH R1		; and store in R1
+
+DONE
+	JUN DONE	; endless loop as end of program
+</pre>
+ </td></tr>
+</tbody></table>
+<br><br>
+<table border="0" cellpadding="0" cellspacing="0" width="700">
+ <tbody><tr><td class="title">Syntax The Assembler</td></tr>
+</tbody></table>
+<ul>
+  <li>Opcodes and Modifiers</li>
+</ul>
+<table border="0" cellpadding="0" cellspacing="0" width="640">
+ <tbody><tr><td class="tekst2">
+  Instructions are <a href="http://e4004.szyc.org/iset.html">mnemonics</a> followed by an (optional) modifier:<br>
+<pre>	OP CODE	        MODIFIERS
+	-------		---------
+	OPC		none
+	OPC D		data
+	OPC R		register
+	OPC RX		register pair
+	OPC R, AA	register, address
+	OPC P, DD	register pair, data
+	OPC C, AA	condition, address
+	OPC AAA		address
+
+    Where 
+
+	D   is a 4 bit data
+	R   is a register address
+	P   is a pair register address
+	AA  is a 8 bit address
+	AAA is a 12 bit address
+	C   is a condition
+</pre>
+ </td></tr>
+</tbody></table>
+<ul>
+  <li>Number Formats</li>
+</ul>
+<table border="0" cellpadding="0" cellspacing="0" width="640">
+ <tbody><tr><td class="tekst2">
+<pre>  	[0-9] 	.... 	decimal
+   	$[0-F] 	.... 	hex
+  	%[01] 	.... 	binary
+  	0[0-7] 	.... 	octal
+</pre>
+ </td></tr>
+</tbody></table>
+<ul>
+  <li>Labels and Identifiers</li>
+</ul>
+<table border="0" cellpadding="0" cellspacing="0" width="640">
+ <tbody><tr><td class="tekst2">
+  Identifiers must begin with a letter [A-Z] and contain letters, digits, and the underscore [A-Z,0-9,_].
+  Only the first 6 characters are significant. All identifiers, numbers, opcodes, and pragmas are case insensitive
+  and translated to upper case. Identifiers must not be the same as valid opcodes.
+  The special identifier "*" refers to the program counter (PC).<br>
+<pre>  Examples:
+    * = $100	    ....   Set start address (PC) to $100.
+    LABEL1  LD R5   ....   Define LABEL1 with the address of instruction LD.
+         JUN LABEL2 ....   Jump to address of label LABEL2.
+    STORE = $080    ....   Define STORE with value $080.
+    HERE = *	    ....   Define HERE with current address (PC).
+    HERE2	    ....   Define HERE2 with current address (PC).
+</pre>
+ </td></tr>
+</tbody></table>
+<ul>
+  <li>Pragmas</li>
+</ul>
+<table border="0" cellpadding="0" cellspacing="0" width="640">
+ <tbody><tr><td class="tekst2">
+  Pragmas start with a dot (.) and must be the only expression in a line:<br>
+<pre>    .BYTE BB 	.... 	Insert 8 bit byte at current address into code.
+    .END 	.... 	End of source, stop assembly. (sign '$' is an option)
+</pre>
+ </td></tr>
+</tbody></table>
+<ul>
+  <li>Comments</li>
+</ul>
+<table border="0" cellpadding="0" cellspacing="0" width="640">
+ <tbody><tr><td class="tekst2">
+<pre>  ; comment 	.... 	Any sequence of characters starting with a semicolon
+			till the end of the line are ignored.
+</pre>
+ </td></tr>
+</tbody></table>
+<ul>
+  <li>General Notes</li>
+</ul>
+<table border="0" cellpadding="0" cellspacing="0" width="640">
+ <tbody><tr><td class="tekst2">
+The assembler doesn't need any special formatting with the following exclusion:<br>
+- there must be white space between a label and a opcode and any operands.<br>
+Only one instruction per line is permitted.
+ </td></tr>
+</tbody></table>
+<br><br>
+<table border="0" cellpadding="0" cellspacing="0" width="700">
+ <tbody><tr><td class="title">Code Example</td></tr></tbody></table>
+<table border="0" cellpadding="0" cellspacing="0" width="640">
+ <tbody><tr><td class="tekst2">
+This code example is taken from "MCS-4 Micro Computer Set" - Intel Corporation 1973<br>
+The example performs a logical "and" function on the data at two 4bit
+ROM input ports and display the result at a RAM output port.
+This program demonstrates how the i4004 accesses its ouput and input
+ports.
+It also shows several basic instructions (e.g. load immediate),
+subroutines, jumps, etc.
+</td></tr>
+</tbody></table>
+<br>
+<table border="1" cellpadding="5" cellspacing="0" width="600">
+ <tbody><tr><td class="code">
+<pre>; four bit "AND" routine on the Intel 4004
+;
+START	FIM 4P, 0	; LOAD ROM PORT 0 ADDRESS
+	SRC 4P		; SEND ROM PORT ADDRESS
+	RDR		; READ INPUT A
+	XCH 0		; A TO REGISTER 0
+	INC 8		; LOAD ROM PORT 1 ADDRESS
+	SRC 4P		; SEND ROM PORT ADDRESS
+	RDR		; READ INPUT B
+	XCH 1		; B TO REGISTER 1
+	JMS AND		; EXECUTE "AND"
+	XCH 2		; LOAD RESULT C
+	WMP		; STORE AT MEMORY PORT 0
+	JUN START	; RESTART
+	NOP
+*=104
+;			"AND" SUBROUTINE
+AND	CLB		; CLEAR ACCUMULATOR AND CARRY
+	XCH 2		; CLEAR REGISTER 2
+	LDM 4		; LOAD LOOP COUNT (LC)
+AND_3	XCH 0		; LOAD A, LC TO REGISTER 0
+	RAR		; ROTATE LEAST SIGNIFICANT BIT TO CARRY
+	XCH 0		; RETURN ROTATED A TO REG 0, LC TO ACC
+	JCN CZ, ROTR1	; JUMP TO ROTR1 IF CARRY ZERO
+	XCH 1		; LOAD B, LC TO ACCUMULATOR
+	RAR		; ROTATE LEAST SIGNIFICANT BIT TO CARRY
+	XCH 1		; RETURN ROTATED B TO REG 1, LC TO ACC
+ROTR2	XCH 2		; LOAD PARTIAL RESULT C, LC TO REG 2
+	RAR		; ROTATE CARRY INTO PARTIAL RESULT MSB
+	XCH 2		; LOAD LC, RETURN C TO REGISTER 2
+	DAC		; DECREMENT THE ACCUMULATOR (LC)
+	JCN ANZ, AND_3	; LOOP IF LC NON ZERO
+	BBL 0		; RETURN
+ROTR1	XCH 1		; LOAD B, LC TO REGISTER 1
+	RAR		; ROTATE B
+	XCH 1		; RETURN ROTATED B TO REG 1, LC TO ACC
+	CLC		; CLEAR CARRY
+	JUN ROTR2	; RETURN TO LOOP
+CZ=10
+ANZ=12
+$
+</pre>
+ </td></tr>
+</tbody></table>
+<br><br>
+</center>
+</body></html>
