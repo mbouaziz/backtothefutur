@@ -9,7 +9,7 @@
 #setCPS 1024
 
 //architecture a n bits (à determiner)
-#define AR 4
+#define AR 8
 
 // Type de la RAM contenant le Program Reader
 RAM PC (0, AR)
@@ -248,14 +248,56 @@ end where;
 // Soustraction : a - b = a + 1 + 2^AR - 1 -b = a + 1 + not(b)
 SUB(a : [AR], b : [AR]) = ( r : [AR] )
 where
-	r:[AR] = ADD(a:[AR], NOT[AR](b:[AR]), 1);
+        r:[AR], _ = ADD(a:[AR], NOT[AR](b:[AR]), vdd());
 end where;
 
 //========================================================//
 
-// Premier Test du SUB de l'ALU
+
+//=======================================================//
+//                    TESTS UNITAIRES                    //
+//=======================================================//
+
+// Premier Test du SUB de l'ALU : 
+// cheched avec un test exhaustif unitaire le Fri Mar 14 17:47:28 CET 2008 
+// avec la commande : simu -p hasm.bop hasm_in.bop 256 | ./testsub -r 8 
 test_SUB( a:[AR], b:[AR] ) = s:[AR]
 where
 	s:[AR] = SUB(a:[AR], b:[AR]);
 end where;
 
+
+//=======================================================//
+//           L'INTERFACE DE LA PUCE SUBLEQ               //
+//=======================================================//
+
+// clk_in : avec le simulateur bibop, on dispose de la primitive clock
+//	mais dans la vraie vie, on remplace l'appel à clock 
+//	par un branchement à l'entrée binaire clk
+
+// run : 1 si on est en run-mode, 0 sinon (ram-mode)
+
+// reset, pc_in : dans le cas ou run=0, si reset est à 1 on modifie la valeur 
+//	du program counter avec la valeur donne dans pc_in
+
+// write : dans le cas ou run=0, est-on en mode write (write = 1) 
+//	ou read (write = 0)
+
+// read|write_adress : dans le ram-mode, on donne l'adresse ou on veut
+//	lire | ecrire
+
+SUBLEQ (
+	// ENTREES : 
+	clk_in, run, reset, pc_in:[AR], write, 
+	read_adress:[AR], write_adress:[AR], data_in:[AR] ) 
+	// SORTIES :
+	= ( pc_out:[AR], data_out:[AR] )
+with unused = ( clk_in ) // BEBOP
+where
+	// clk = id(clk_in); dans le cas ou on porte ce code vers du VHDL
+	clk = id( clock() ); // Dans le cas BEBOP
+	
+// La memoire RAM de la Machine SubLeq 
+word_out:[AR] = ram_MEM(read:[AR], write:[AR], whattodo, word_in:[AR]);
+
+end where;
