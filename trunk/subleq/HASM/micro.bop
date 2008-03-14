@@ -1,0 +1,554 @@
+// Systemes Digitaux, Simulateur de circuit
+// Mathieu Barbin, Ocan Sankur.
+
+// Code du microprocesseur en langage Bebop
+// Reglage de la frequence du simulateur
+#setCPS 1024
+
+//Cycle par second
+#define CPS 1024
+
+//architecture a 8 bits
+#define AR 8
+
+//le nb de bits reserves a opcode dans une instruction (Code Length)
+#define CL 4
+
+//l'adresse de la sortie materiel.
+#define OUT 255
+
+//le nb d'octets rendus par le materiel de sortie (les autres sont tronques)
+#define TRONK_MAT 8
+
+RAM PRG0(0,AR) = text { 11000000 }
+RAM PRG1(0,AR) = text { 11000011 }
+RAM  R0 (0,AR) = text { 01000000 }
+RAM  R1 (0,AR) = text { 11100000 }
+RAM PC (0,AR)
+
+// Le code binaire a executer : fichier en assembleur montre.asm compilé avec visa
+ROM MICROCODE(AR,AR) = file("montre.bin")
+
+// L'initialisation de la date : utiliser l'utilitaire tools/get_date 
+// pour initialiser a la date souhaitee.
+RAM MEM(AR,AR) = text{
+	sec: 00011100
+	min: 11011100
+	hou: 11101000
+	day: 01111000
+	mon: 11010000
+	yea: 11000110
+}
+
+RAM DEV_ADR(0,AR) 
+
+//****************************************//
+//		STANDARD TEMPLATE LIBRARY		  //
+//****************************************//
+ID[N] ( a : [N] ) = (b : [N])
+where
+	for idi = 0 to N - 1
+		b[idi] = id(a[idi]);
+	end for;
+end where;
+
+MUX[N] ( c, d1 : [N] , d2 : [N] ) = ( s : [N] )
+where
+	for k = 0 to N - 1
+		s[k] = mux(c,d1[k],d2[k]);
+	end for;
+end where;
+
+GND[D]()=( g : [D])
+where
+	for i = 0 to D - 1
+		g[i] = gnd();
+	end for;
+end where;
+
+VDD[N]()=(v : [N])
+where
+	for i = 0 to N - 1
+		v[i] = vdd();
+	end for;
+end where;
+
+AND[N]( a : [N] ) = s
+where
+	b[0] = id(a[0]);
+	for i = 1 to N - 1
+		b[i] = and( b[i - 1], a[i]);
+	end for;
+	s = id(b[N - 1]);
+end where;
+
+NOT[N]( a : [N] ) = (s : [N] )
+where
+	for i = 0 to N - 1
+		s[i] = not(a[i]);
+	end for;
+end where;
+
+EQUALS[N]( a : [N], b : [N] ) = s
+where
+	q[-1] = vdd();
+	for i = 0 to N - 1
+		q[i] = and( q[i-1], or(and(a[i],b[i]),and(not(a[i]), not(b[i]))));
+	end for;
+	s = id(q[N-1]);
+end where;
+
+//N: nombre de feuilles. D: nombre de bits de donnes. donc logN bits de decisions
+BDD[N][D]( input : [N] : [D], deci : [log(N)] ) = s : [D]
+where
+	for i = 0 to N - 1
+		br[0][i] : [D]= ID[D](input[i] : [D]);
+	end for;
+	for i = 1 to log(N)
+		for j = 0 to N / (2 ^ i) - 1
+			br[i][j] : [D] = MUX[D]( deci[i - 1], br[i - 1][2*j + 1] : [D], br[i - 1][2*j] : [D]);
+		end for;
+	end for;
+	s : [D] = ID[D](br[log(N)][0] : [D]);
+end where;
+
+//copies the input N times
+VECTORIZE[N](a) =(b : [N])
+where
+	for i = 0 to N - 1
+		b[i] = id(a);
+	end for;
+end where;
+
+FULL_ADDER( a, b, c) = (s, r)
+where
+	s = xor(xor(a,b),c);
+	r = or(or( and(a,b), and(a,c)),and(b,c));
+end where;
+
+REG[N]( a : [N] ) = (s : [N])
+where
+	for i = 0 to N -1
+		s[i] = reg(a[i]);
+	end for;
+end where;
+
+REGEN[N]( a : [N], en) = (s : [N])
+where
+	for j = 0 to N -1
+		s[j] = regen(a[j], en);
+	end for;
+end where;
+
+
+//Compteur elementaire de 1 bit
+CM2 (in) = (s,r)
+where
+  s = xor(in,ro); 
+  ro = reg(s);
+  r = and(in,ro);
+end where;
+
+//Compteur modulo N=2^D
+CM[D](in)=(out : [D])
+with unused = r[D-1]
+where
+		r[-1] = id(in);
+		for i = 0 to D - 1
+			out[i],r[i] = CM2(r[i - 1]);
+		end for;
+end where;
+
+//Diviseur d'horloge modulo 2^D
+DIVTIME[D](in)=(out)
+where
+	out = AND[D](NOT[D](CM[D](in)));
+end where;
+
+//La difference avec FULL_ADDER: s est la sortie du registre
+//et non pas celle du xor. 
+//Inconvenient: un cycle de retard des resultats
+//L'interet: pas de cycle dans le circuit
+//Conclusion: le prof avait raison
+//quand rst vaut 1 on affecte la valeur val dans le reg sinon ++ 
+ADDER (i,rst, val ) = s,r
+where
+  s = Z(mux(rst,val,xor(s,i)));
+  r = and(s,i);
+end where;
+
+//C'est un compteur mod 5 special, avec deux 
+//ctl is
+//	00 -> regular
+//  10 -> mettre a 0 (10_{2} vaut 1_{10})
+//  11 -> mettre a 3
+//Si ctl est regulier et que rst=1 on prend ctl'=01
+//Si ctl=11 et que rst=1, par convention, on garde la valeur de ctl
+//Sinon c'est rst qui passe (donc ctl'=01)
+CM5 (in, ctl[0], ctl[1]) = (out : [3])
+		with unused = (c[3])
+where
+	is_zero = and(in,and(not(out[0]),and(not(out[1]),out[2])));
+	//calcul du ctl effectif (i.e. combine avec rst)
+	ctl'[0] = or(ctl[0], is_zero); 
+	ctl'[1] = and(ctl[0], ctl[1]);
+
+	ctl'11 = and(ctl'[0], ctl'[1]);
+	resetto0 = and(ctl'[0], not(ctl'[1]));//si ctl'=10
+
+	//les valeurs reset pour chaque case:
+	reset[0] = or(resetto0, ctl'11);
+	val[0] = id(ctl'11);	//si c'est alltozero ctl'11=0, si c'est ctl'11 alors =1
+
+	reset[1] = id(reset[0]);	//symetrique
+	val[1] = id(ctl'11);
+
+	reset[2] = id(reset[0]);
+	val[2] = gnd();				//que ce soit ctl'11 ou alltozero, on le met a 0
+
+	c[0] = id(in);
+	for i = 1 to 3 
+		out[3 - i], c[4 - i] = ADDER(c[3 - i], reset[3 - i], val[3 - i]);
+	end for;
+end where;
+
+//retourne 0/1. test pour un nombre, bit faible a gauche
+//a appeler avec les 3 bits les moins significatifs
+ISZERO( dat : [3] ) = b
+where
+	b = AND[3](NOT[3](dat : [3]));
+end where;
+
+ISONE( dat : [3] ) = b
+where
+	b = and(dat[0],and(not(dat[1]),not(dat[2])));
+end where;
+
+ISTWO( dat : [3] ) = b
+where
+	b = and(not(dat[0]),and(dat[1],not(dat[2])));
+end where;
+
+ISTHREE( dat : [3] ) = b
+where
+	b = and(dat[0],and(dat[1],not(dat[2])));
+end where;
+
+ISFOUR( dat : [3] ) = b
+where
+	b = and(not(dat[0]),and(not(dat[1]),dat[2]));
+end where;
+
+//reverse bit ordering
+REVERSE[N]( dat : [N] ) = rdat : [N]
+where
+	for i = 0 to N -1
+		rdat[i] = id(dat[N - i -1]);
+	end for;
+end where;
+
+
+
+//****************************************//
+//		Les modules de l'ALU			  //
+//****************************************//
+
+
+SWC(r0 : [AR], r1 : [AR]) = ( nr0 : [AR], nr1 : [AR] )
+where
+	for i = 0 to AR - 1
+		nr0[i] = id(r1[i]);
+		nr1[i] = id(r0[i]);
+	end for;
+end where;
+
+
+//R0 == R1 ?
+CMP(r0 : [AR], r1 : [AR]) = ( nr1 : [AR]) 
+where
+	
+	for i = 0 to AR - 1
+		t1[i] = or(and(r0[i],r1[i]),not(or(r0[i],r1[i])));
+	end for;
+
+	t2[0] = id(t1[0]);
+	for i = 1 to AR - 1
+		t2[i] = and(t2[i-1], t1[i]);
+	end for;
+
+	nr1[0] = id(t2[AR-1]);
+	nr1[1..(AR-1)] = GND[AR-1]();
+end where;
+
+//bitwise not. both R0 and R1
+BNOT(r0 : [AR], r1 : [AR]) = (nr0 : [AR], nr1 : [AR])
+where
+	nr0 : [AR] = NOT[AR](r0 : [AR]);
+	nr1 : [AR] = NOT[AR](r1 : [AR]);
+end where;
+
+//bitwise and
+BAND(r0 : [AR], r1 : [AR]) = (nr1 : [AR])
+where
+	for i = 0 to 7
+		nr1[i] = and(r0[i],r1[i]);
+	end for;
+end where;
+
+ADD(r0 : [AR], r1 : [AR]) = (nr1 : [AR], op_flag)
+where
+	c[0] = gnd();
+	for i = 0 to AR - 1
+		nr1[i],c[i+1] = FULL_ADDER(r0[i],r1[i],c[i]);
+	end for;
+	//flag de debordement
+	op_flag = id(c[AR]);
+end where;
+
+//mult parallele
+//poly p.148
+//invariant: c[i+1][j-1], d[i][j+1] = FULLADDER( a[j] et b[i], c[i][j], d[i][j])
+//qd on parcourt de g a d et de haut en bas
+MULT( r0 : [AR], r1 : [AR]) = (nr1 : [AR], op_flag)
+with unused = ( c[8][0..7] )
+where
+	for i = 0 to AR - 1
+		c[0][i] = gnd();
+		d[i][0] = gnd();
+	end for;
+	for i = 0 to AR - 1
+		nr1[i],d[i][1] = FULL_ADDER(and(r0[0],r1[i]),c[i][0],d[i][0]);
+		for j = 1 to AR - 1
+				c[i+1][j-(1)],d[i][j+1] = FULL_ADDER(and(r0[j], r1[i]),c[i][j],d[i][j]);
+		end for;
+		//gerer les debordements au passage d'une ligne a l'autre
+		c[i+1][AR - 1] = id(d[i][AR]);
+	end for;
+	//TODO: debordement op_flag?
+	op_flag = gnd();
+end where;
+
+
+//Get Op Flag. Copies the content of op_flag to R1
+GOF( f ) = (nr1 : [AR])
+where
+	nr1[0] = id(f);
+	nr1[1..AR - 1] = GND[AR-1]();
+end where;
+
+//JMP=8
+ISJMP( p : [CL] ) = b
+where
+	b = and( not(p[0]), and( not(p[1]), and(not(p[2]), p[3])));
+end where;
+//JMN=9
+ISJMN( p : [CL] ) = b
+where
+	b = and( p[0], and( not(p[1]), and(not(p[2]), p[3])));
+end where;
+//JMZ=10
+ISJMZ( p : [CL] ) = b
+where
+	b = and( not(p[0]), and( p[1], and(not(p[2]), p[3])));
+end where;
+
+//****************************************//
+
+//****************************************//
+//			DEVICE OUT					  //
+//****************************************//
+
+//DEVICE OUT
+//un BDD a l'envers.. a un bit.
+DISTRIB[N]( in, dec : [N]) = out : [2 ^ N]
+where
+		s[-1][0] = id (in);
+		for i = 0 to N - 1
+				for j = 0 to 2^i - 1
+						s[i][2*j] = mux(dec[N - 1 - i],gnd(),s[i - 1][j]);
+						s[i][2*j+1] = mux(dec[N - 1 - i],s[i - 1][j], gnd());
+				end for;
+		end for;
+		for i = 0 to 2^N - 1
+				out[i] = id(s[N - 1][i]);
+		end for;
+end where; 
+
+DEVICE_OUT( wdev, data : [AR] ) = out : [TRONK_MAT] : [AR]
+with unused = ( en_out[TRONK_MAT..2^AR - 1] )
+where
+	iDev,_ = CM2(Z(wdev));
+	dev_adr : [AR] = ram_DEV_ADR(and(not(iDev), wdev), data : [AR]);
+	//create all the output ports
+	en_out : [2^AR] = DISTRIB[AR]( and(wdev, iDev), dev_adr : [AR] );
+	for i = 0 to (TRONK_MAT) - 1
+		out[i] : [AR] = REGEN[AR]( data : [AR], en_out[i]);
+	end for;
+end where;
+//****************************************//
+
+
+
+// entrees: les pseudo-valeurs de PRG0 et PRG1, la sortie du registre sleep s, la sortie cm5 mode
+ALU(p0 : [AR], p1 : [AR], s, mode : [3] )=( r1 : [AR], out : [TRONK_MAT] : [AR])
+with unused = ( en_out[1], giren[0..7], p0[6], p0[7] ) 
+where
+	op_flag = regen(new_op_flag, and(s,wf) );
+
+	r0 : [AR] = ram_R0( and(s, wr0), REG[AR](nr0 : [AR]) );
+	r1 : [AR] = ram_R1( and(s, wr1), REG[AR](nr1 : [AR]) );
+
+	R0_SWC : [AR], R1_SWC : [AR] = SWC(r0:[AR],r1:[AR]);
+	R0_NOT : [AR], R1_NOT : [AR] = BNOT(r0:[AR],r1:[AR]);
+
+	//LOCAL MEMORY for STORE and LOAD
+	MEM_OUT : [AR] = ram_MEM( REVERSE[AR](p1 : [AR]), REVERSE[AR](p1 : [AR]), and(s,w_mem), mem_input : [AR] );
+
+	//device out
+	wdev = BDD[2^CL][1](
+				GND[11](),	//ADD MULT AND SWC CMP ... JMZ
+				and(write_time, EQUALS[AR]( VDD[AR](), p1 : [AR])),	//STORE and if p1 is 255.
+				GND[4](), 	//LOAD SLEEP .. ..
+				p0 : [CL]);
+	//data sent to device is R0 or R1
+	data_to_dev : [AR] =MUX[AR]( p0[CL], r1 : [AR], r0 : [AR]) ;
+	 out : [TRONK_MAT] : [AR] = DEVICE_OUT(wdev, data_to_dev : [AR]);
+
+	//write_enable iff STORE and cm5==4.
+	w_mem = BDD[2^CL][1](
+				GND[11](),	//ADD MULT AND SWC CMP ... JMZ
+				and(write_time, not(wdev)),	//STORE and if not writing to device
+				GND[4](), 	//LOAD SLEEP .. ..
+				p0 : [CL]);
+	//mem_out effectif. (selon si c'est vraiment mem_out ou c'est une constante #..)
+	//p0[CL+1] est a 1 si c'est une adresse.
+	eff_mem_out : [AR] = MUX[AR]( p0[CL+1], MEM_OUT : [AR], p1 : [AR]);
+
+	// si p0[Cl] alors R1 sinon R0
+	mem_input : [AR]= MUX[AR]( p0[CL], r1 : [AR], r0 : [AR]);
+	//
+
+	//calculate possible new values for R0 or R1
+	nr1 : [AR], new_op_flag = BDD[2^CL][AR+1](
+				GND[AR+1](), //NOP
+				ADD(r0 : [AR], r1 : [AR]), 
+				MULT(r0 : [AR],r1 : [AR]),
+				BAND(r0 : [AR],r1 : [AR]), gnd(), 
+				R1_SWC : [AR], gnd(), 
+				CMP(r0 : [AR],r1 : [AR]),gnd(), 
+				R1_NOT : [AR], gnd(), 
+				GOF(op_flag), gnd(), 
+				GND[4*(AR+1)](), 
+				eff_mem_out : [AR], gnd(), 
+				GND[3*(AR+1)](),	//SLEEP + opcode15
+				p0 : [CL]);			//decision p0[0..CL - 1]
+	nr0 : [AR] = BDD[2^CL][AR](
+				GND[4 * AR](), 
+				R0_SWC : [AR], 
+				GND[AR](), 
+				R0_NOT : [AR], 
+				GND[5 * AR](), 
+				eff_mem_out : [AR],
+				GND[3*AR](),
+				p0 : [CL]);			//decision
+	//is writing time?
+	write_time = ISFOUR( mode : [3] );
+
+	//Calculate write permission for R0, R1 and op_flag
+	//write_time means yes but only if it is the right time (i.e. CM5 == 4).
+	wr1 = BDD[2^CL][1](
+				gnd(),//NOP
+				VECTORIZE[5](write_time),//ADD MULT AND SWC CMP
+				and(write_time,p0[CL]),//  if p0[0..CL -1] = NOT then p0[CL] is R1 or R0
+				write_time,	//GOF (get flag)
+				GND[4](),//JMP JMN JMZ STORE
+				and(write_time,p0[CL]),// if p0[0..CL -1] = LOAD then p0[CL] is R1 or R0
+				GND[3](), //SLEEP + 2 empty opcodes
+				p0 : [CL]);
+	wr0 = BDD[2^CL][1](
+				gnd(),//NOP
+				GND[5](),//ADD MULT AND SWC CMP
+				and(write_time,not(p0[CL])),//  if p0[0..CL -1] = NOT then p0[CL] is R1 or R0
+				gnd(),	//GOF (get flag)
+				GND[4](),//JMP JMN JMZ STORE
+				and(write_time,not(p0[CL])),// if p0[0..CL -1] = LOAD then p0[CL] is R1 or R0
+				GND[3](), //SLEEP + 2 empty opcodes
+				p0 : [CL]);
+	wf = BDD[2^CL][1](
+				VDD[2](),	//ADD and MULT
+				GND[14](),
+				p0 : [CL]);
+end where;
+
+
+//****************************************//
+//			Instruction Reader			  //
+//****************************************//
+
+INSTR_READER()=( d : [TRONK_MAT] : [AR])
+with unused = t1, t2, tmp
+where
+
+	//********* PARTIE ROM-PC *********//
+	rom_out : [AR] = rom_MICROCODE( REVERSE[AR](pc : [AR]));
+
+	p0 : [AR] = ram_PRG0( and(s,wp0), rom_out : [AR]);
+	p1 : [AR] = ram_PRG1( and(s,wp1), rom_out : [AR]);
+	pc : [AR] = ram_PC( and(s,wpc), REG[AR](nPC : [AR]));
+	
+	nPC : [AR] = MUX[AR]( not( or (ISTHREE(cm5:[3]),ISFOUR(cm5:[3]))), incrPC : [AR], p1 : [AR]);
+	incrPC : [AR], _ = ADD(pc : [AR], vdd(), GND[AR - 1]());
+
+	tmp = or(ISONE( cm5 : [3]), ISTHREE(cm5 : [3]));
+	wpc = or( ISONE( cm5 : [3]), or( and( not(wasP0Jump), ISTHREE(cm5 : [3])), and( ISFOUR( cm5 : [3]), wasP0Jump)));
+	//is P0 8,9,10?
+	//reg: p0 est lu a cm5=0, donc wasP0Jump a sa valeur a cm5=1. mais de toute facon 
+	//pendant cm5=0 on n'a pas besoin de sa valeur puisque le test est cm5>=3 et wasP0Jump..
+	//OLD VERSION: wasP0Jump = reg(and( p0[3], and( not(p0[2]), not(and(p0[0],p0[1])))));
+	b1 = ISJMP( p0 : [CL] );
+	b2 = and( ISJMN( p0 : [CL] ), not(EQUALS[AR]( r1 : [AR], GND[AR]())));
+	b3 = and( ISJMZ( p0 : [CL] ), EQUALS[AR]( r1 : [AR], GND[AR]()));
+	wasP0Jump = reg( or(b1,or(b2,b3))); 
+	//*********************************//
+
+	//***** PARTIE COMPTEURS+ALU ******//
+	//Compteur general
+	iCG = DIVTIME[log(CPS)](vdd());
+
+	isP0Sleep = and( p0[0], and( not(p0[1]), and( p0[2],  p0[3])));
+	//sleep reg
+
+	s = nregen(iCG, or(and(isP0Sleep, ISFOUR( cm5 : [3] )), iCG));
+
+	//does instr take 2 words (LOAD = 12 STORE=11)
+	//OLD (WRONG) CODE: isP2W = and(p0[3], xor(and(not(p0[0]),and(not(p0[1]),p0[2])) , and(p0[0],and(p0[1],not(p0[2])))));
+	isP2W = BDD[2^CL][1](
+					GND[8](),	//NOP..GOF
+					VDD[5](), 	//JMP..LOAD
+					GND[3](),
+					p0 : [CL]);
+	setCM5to3 = and(ISONE( cm5 : [3]), not(isP2W));
+	
+	//compteur local. (0..4 pour chaque instruction)
+	//pour verification faire un tableau de valeurs
+	t1 = or(setCM5to3, iCG);
+	t2 = id(setCM5to3);
+	cm5 : [3]= CM5(vdd(),or(setCM5to3, iCG), and(not(iCG), setCM5to3));
+	
+	//write permission for p0 and p1
+	wp0 = and(s, ISZERO( cm5 : [3]));
+	wp1 = and(s, ISTWO( cm5 : [3]));
+	
+	//p0 and p1 as sent to ALU
+	p'0 : [AR] = MUX[AR]( or(ISTHREE(cm5 : [3]), ISFOUR(cm5 : [3])), p0 : [AR], GND[AR]());
+	p'1 : [AR] = MUX[AR]( or(ISTHREE(cm5 : [3]), ISFOUR(cm5 : [3])), p1 : [AR], GND[AR]());
+	//*********************************//
+	
+	 r1 : [AR], d' : [TRONK_MAT] : [AR]= ALU(p'0 : [AR], p'1 : [AR], s, cm5 : [3]);
+	 for i = 0 to TRONK_MAT - 1
+		d[i] : [AR]  = REVERSE[AR]( d'[i] : [AR] );
+	 end for;
+end where;
+
+
+

@@ -1,0 +1,13 @@
+// =======================================================//
+// Projet Systèmes Numériques - ENS, semestre 2           //
+// Mathieu Barbin, Mehdi Bouaziz.                         //
+// HASM : Harware Architecture for a SubLeq Machine       //
+// INPUT_FILE : version en langage Bebop (bop)            //
+// =======================================================//
+ 
+#define AR 4
+
+input = ( a:[AR], b:[AR] );
+
+a:[0..AR-1] = counter
+b:[AR-1..0] = counter
