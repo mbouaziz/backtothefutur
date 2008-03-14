@@ -5,9 +5,9 @@
 // INPUT_FILE : version en langage Bebop (bop)            //
 // =======================================================//
  
-#define AR 4
+#define AR 8
 
 input = ( a:[AR], b:[AR] );
 
-a:[0..AR-1] = counter
-b:[AR-1..0] = counter
+a[0..AR-1] = counter
+b[AR-1..0] = counter
