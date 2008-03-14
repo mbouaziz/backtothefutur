@@ -14,6 +14,9 @@
 // Type de la RAM contenant le Program Reader
 RAM PC (0, AR)
 
+// RAM contenant la valeur de a
+RAM A (0, AR)
+
 // Type de la RAM memoire de la machine SubLeq
 // Avec initialisation a partir d'un fichier code binaire pour machine SubLeq
 // a executer en mode RUN. (architecture 
