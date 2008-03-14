@@ -1,6 +1,6 @@
 Caractéristiques
 	Archi 4 bits
-	740	kHz
+	740	kHz/750 kHz
 	2300 transistors
 
 
@@ -24,9 +24,10 @@ Registres
 	Index registers
 		16 registres de 4 bits <=> 8 registres de 8 bits
 
-Jeu d'instructions
+Instructions
 	46 instructions de 1 ou 2 octets
 	ALU binaire et décimale
+	8 ou 16 cycles par instruction
 
 Modes d'adressage
 	Registre (4 bits)
@@ -35,17 +36,18 @@ Modes d'adressage
 	Immédiat (4 ou 8 bits)
 
 Périphériques
-	4001
+	4001	[ROM]
 		256 x 8 bits mask programmable ROM
 		(16 pins)
-	4002
-		320 bits (80 x 4 bits) RAM, 4 bits output port
+	4002	[RAM]
+		320 bits (4 x 20 x 4 bits) RAM, 4 bits output port
 		(16 pins)
-	4003
+	4003	[SR]
 		10 bits shift register/output expander ??
 		static shift register to be used for expanding the I/O lines, for example, for keyboard scanning or for controlling a printer
 		10 bits parallel output shift register for scanning keyboards, displays, printers, etc.
 		(16 pins)
+	4004	[CPU]
 	4008
 		memory interface chip
 		Interface un 4004 avec des composants PROM, ROM et RAM pour la mémoire du programme
@@ -62,7 +64,8 @@ Pinouts
 		2	D1
 		3	D2
 		4	D3
-	5	VSS
+	GND
+		5	VSS
 	6	Clock phase 1
 	7	Clock phase 2
 	8	Sync-Out
@@ -70,7 +73,8 @@ Pinouts
 	10	Test
 	Memory Control Output
 		11	CM-ROM
-	12	VDD
+	-15V
+		12	VDD
 	Memory Control Outputs
 		13	CM-RAM3
 		14	CM-RAM2
