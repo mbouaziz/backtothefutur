@@ -3,24 +3,41 @@
 // Mathieu Barbin, Mehdi Bouaziz.                         //
 // HASM : Harware Architecture for a SubLeq Machine       //
 // NETLIST : version en langage Bebop (bop)               //
+// VERSION : Sat Mar 15 01:05:34 CET 2008                 //
 // =======================================================//
+
+// FIXME : LES RAM lisent les adresses des forts vers les faibles
+// penser donc a faire un reverse soit avec la syntaxe :[-5] soit [AR-1..0]
 
 // Reglage de la frequence du simulateur (simu)
 #setCPS 1024
 
 //architecture a n bits (à determiner)
-#define AR 8
+#define AR 4
+
+// le nombre de bits necessaire a la representation de l'indice de cycle
+// ici, on ne depasse jamais 5 cycles, donc CL = 3
+#define CL 3
 
 // Type de la RAM contenant le Program Reader
 RAM PC (0, AR)
 
-// RAM contenant la valeur de a
-RAM A (0, AR)
+// Instruction : SubLeq ( a, b, c)
+// RAMs contenant les valeurs de &a, &b
+// nom Prefixé par P comme "Pointeur"
+RAM PRA (0, AR)
+RAM PRB (0, AR)
+
+// RAMs contenant les valeurs de *a, *b
+// Vx comme "Valeur de x" ( pointee par PRx )
+RAM VRA (0, AR)
+RAM VRB (0, AR)
 
 // Type de la RAM memoire de la machine SubLeq
 // Avec initialisation a partir d'un fichier code binaire pour machine SubLeq
 // a executer en mode RUN. (architecture 
-RAM MEM (AR, AR) = file ("subleq.bin")
+RAM MEM (AR, AR) = text { 0000 1000 0100 1100 0010 1010 0110 }
+// = file ("subleq.bin")
 
 //========================================================//
 //		STANDARD TEMPLATE LIBRARY		  //
@@ -66,14 +83,6 @@ where
 	s = id(b[N - 1]);
 end where;
 
-// Et bit à bit entre 2 mots de N bits
-BAND[N](r0 : [N], r1 : [N]) = (nr1 : [N])
-where
-	for i = 0 to N - 1
-		nr1[i] = and(r0[i],r1[i]);
-	end for;
-end where;
-
 // NOT bit à bit sur un mot de N bits
 NOT[N](a : [N]) = (s : [N])
 where
@@ -107,14 +116,6 @@ where
 	s : [D] = ID[D](br[log(N)][0] : [D]);
 end where;
 
-// Prise Multiple de 1 bit vers N
-VECTORIZE[N](a) =(b : [N])
-where
-	for i = 0 to N - 1
-		b[i] = id(a);
-	end for;
-end where;
-
 // Composante de base d'un additionneur binaire
 FULL_ADDER( a, b, c) = (s, r)
 where
@@ -130,105 +131,37 @@ where
 	end for;
 end where;
 
-// Regen N bits
-REGEN[N]( a : [N], en) = (s : [N])
-where
-	for j = 0 to N -1
-		s[j] = regen(a[j], en);
-	end for;
-end where;
-
-// Compteur elementaire de 1 bit
-CM2 (in) = (s,r)
-where
-	s = xor(in,ro); 
-	ro = reg(s);
-	r = and(in,ro);
-end where;
-
-// Compteur modulo N=2^D
-CM[D](in)=(out : [D])
-with unused = r[D-1]
-where
-	r[-1] = id(in);
-	for i = 0 to D - 1
-		out[i],r[i] = CM2(r[i - 1]);
-	end for;
-end where;
-
-//Diviseur d'horloge modulo 2^D
-DIVTIME[D](in)=(out)
-where
-	out = AND[D](NOT[D](CM[D](in)));
-end where;
-
-// FIXME : what is it ocan ??
-
-//La difference avec FULL_ADDER: s est la sortie du registre
-//et non pas celle du xor. 
-//Inconvenient: un cycle de retard des resultats
-//L'interet: pas de cycle dans le circuit
-//Conclusion: le prof avait raison
-//quand rst vaut 1 on affecte la valeur val dans le reg sinon ++ 
-ADDER (i,rst, val ) = s,r
-where
-  s = Z(mux(rst,val,xor(s,i)));
-  r = and(s,i);
-end where;
-
-// FIXME : is it really usefull ?
-
-//C'est un compteur mod 5 special, avec deux 
-//ctl is
-//	00 -> regular
-//  10 -> mettre a 0 (10_{2} vaut 1_{10})
-//  11 -> mettre a 3
-//Si ctl est regulier et que rst=1 on prend ctl'=01
-//Si ctl=11 et que rst=1, par convention, on garde la valeur de ctl
-//Sinon c'est rst qui passe (donc ctl'=01)
-CM5 (in, ctl[0], ctl[1]) = (out : [3])
-with unused = (c[3])
-where
-	is_zero = and(in,and(not(out[0]),and(not(out[1]),out[2])));
-	//calcul du ctl effectif (i.e. combine avec rst)
-	ctl'[0] = or(ctl[0], is_zero); 
-	ctl'[1] = and(ctl[0], ctl[1]);
-
-	ctl'11 = and(ctl'[0], ctl'[1]);
-	resetto0 = and(ctl'[0], not(ctl'[1]));//si ctl'=10
-
-	//les valeurs reset pour chaque case:
-	reset[0] = or(resetto0, ctl'11);
-	val[0] = id(ctl'11);	//si c'est alltozero ctl'11=0, si c'est ctl'11 alors =1
-
-	reset[1] = id(reset[0]);	//symetrique
-	val[1] = id(ctl'11);
-
-	reset[2] = id(reset[0]);
-	val[2] = gnd();				//que ce soit ctl'11 ou alltozero, on le met a 0
-
-	c[0] = id(in);
-	for i = 1 to 3 
-		out[3 - i], c[4 - i] = ADDER(c[3 - i], reset[3 - i], val[3 - i]);
-	end for;
-end where;
-
-// FIXME : is it usefull ??
-
 // Tests suivants : mots ecrits des poids faibles vers les forts
-
-// Test d'egalite à Zero
-ISZERO( dat : [3] ) = b
+// Permet de faire les switch sur l'index du cycle d'execution
+// on observe que les 3 bits les moins significatifs
+IS0( dat : [CL] ) = b
 where
-	b = AND[3](NOT[3](dat : [3]));
+	b = AND[CL](NOT[CL](dat[0..CL-1]));
 end where;
 
-// Reverse bit ordering
-REVERSE[N]( dat : [N] ) = rdat : [N]
+IS1( dat : [CL] ) = b
 where
-	for i = 0 to N -1
-		rdat[i] = id(dat[N - i -1]);
-	end for;
+	b = and(dat[0], AND[CL-1](NOT[CL-1](dat[1..CL-1])));
+end where;
+
+IS2( dat : [CL] ) = b
+where
+	b = and(not(dat[0]), and(dat[1], NOT[CL-2](dat[2..CL-1])));
+end where;
+
+IS3( dat : [CL] ) = b
+where
+	b = and(dat[0], and(dat[1],not(dat[2])));
+end where;
+
+IS4( dat : [CL] ) = b
+where
+	b = and(not(dat[0]),and(not(dat[1]),dat[2]));
+end where;
+
+IS5( dat : [CL] ) = b
+where
+	b = and(dat[0],and(not(dat[1]),dat[2]));
 end where;
 
 //========================================================//
@@ -238,20 +171,20 @@ end where;
 //========================================================//
 
 // Addition Binaire sur AR bits, avec retenue d'entree et retenue de sortie
-ADD(r0 : [AR], r1 : [AR], carry_in) = (nr1 : [AR], carry_out)
+ADD[N](r0 : [N], r1 : [N], carry_in) = (nr1 : [N], carry_out)
 where
         c[0] = id(carry_in);
-	for i = 0 to AR - 1
+	for i = 0 to N - 1
 		nr1[i],c[i+1] = FULL_ADDER(r0[i],r1[i],c[i]);
 	end for;
 	//flag de debordement
-	carry_out = id(c[AR]);
+	carry_out = id(c[N]);
 end where;
 
 // Soustraction : a - b = a + 1 + 2^AR - 1 -b = a + 1 + not(b)
 SUB(a : [AR], b : [AR]) = ( r : [AR] )
 where
-        r:[AR], _ = ADD(a:[AR], NOT[AR](b:[AR]), vdd());
+        r:[AR], _ = ADD[AR](a:[AR], NOT[AR](b:[AR]), vdd());
 end where;
 
 //========================================================//
@@ -261,14 +194,13 @@ end where;
 //                    TESTS UNITAIRES                    //
 //=======================================================//
 
-// Premier Test du SUB de l'ALU : 
+// Premier Test : SUB de l'ALU 
 // cheched avec un test exhaustif unitaire le Fri Mar 14 17:47:28 CET 2008 
 // avec la commande : simu -p hasm.bop hasm_in.bop 256 | ./testsub -r 8 
 test_SUB( a:[AR], b:[AR] ) = s:[AR]
 where
 	s:[AR] = SUB(a:[AR], b:[AR]);
 end where;
-
 
 //=======================================================//
 //           L'INTERFACE DE LA PUCE SUBLEQ               //
@@ -280,27 +212,132 @@ end where;
 
 // run : 1 si on est en run-mode, 0 sinon (ram-mode)
 
-// reset, pc_in : dans le cas ou run=0, si reset est à 1 on modifie la valeur 
+// set_pc, pc_in : dans le cas ou run=0, si reset est à 1 on modifie la valeur 
 //	du program counter avec la valeur donne dans pc_in
 
 // write : dans le cas ou run=0, est-on en mode write (write = 1) 
 //	ou read (write = 0)
 
-// read|write_adress : dans le ram-mode, on donne l'adresse ou on veut
-//	lire | ecrire
+// read|write_adress, data_in : dans le ram-mode, on donne l'adresse ou on veut
+//	lire | ecrire la data_in qui est ignoree sinon
+
+// pc_out : donne la valeur du registre PC pour permettre au 
+//	circuit qui controle le subleq de faire des tests de terminaison
+//	exemple de convention possible : subleq 0 0 0 à l'adresse 0 boucle
+//	SubLeq a fini ssi PC = 0 (ou autre convention à chosir ...)
+
+// data_out : dans le cas run=0 et lecture, donne la valeur lue
+//	prend des valeurs arbitraires dans les autres cas
+
+// Variables indexees par L : locales a la machine SUBLEQ
+// Variables indexees par LSL : signaux utilises en mode RUN = 1
+
+// ICY : index Cycle (on tourne en 6 cycles (ICY = 0..5) ou en 5 cycles si *b - *a <> 0)
 
 SUBLEQ (
 	// ENTREES : 
-	clk_in, run, reset, pc_in:[AR], write, 
+	clk_in, run, set_pc, pc_in:[AR], write, 
 	read_adress:[AR], write_adress:[AR], data_in:[AR] ) 
 	// SORTIES :
-	= ( pc_out:[AR], data_out:[AR] )
-with unused = ( clk_in ) // BEBOP
+	= ( ICY:[CL], pc_out:[AR], data_out:[AR], LSL_NEW_LPC:[AR], Lmem_mod, Lmem_read:[AR] )
+with unused = ( clk_in, clk ) // BEBOP
 where
+	// RESET : On est en run = 0 ou on vient de mettre run à 1
+	RESET = or(not(run), and(run, not(reg(run))));
+ 
+	// GESTION DU Program Counter et de l'Index CYcle ( LPC:[AR] & ICY:[CL] )
+	// FIXME : optimisation du calcul des bits ICY
+	ICY2 = IS2(ICY:[CL]);
+	ICY3 = IS3(ICY:[CL]);
+	ICY4 = IS4(ICY:[CL]);
+	ICY5 = IS5(ICY:[CL]);
+	
+	// Savoir la valeur proposee pour PC par le mode run dans le cas ou il faut changer
+	LSL_NEW_LPC:[AR] = MUX[AR](ICY5, Zmem_out:[AR], LPC3:[AR]);
+	
+	// next_instruction designe le fait qu'il faut remettre ICY à 0 pour le prochain cycle
+	// cela correspond exactement au moment ou il faut changer la valeur du PC
+	// le CASE_ZERO designe le cas *b - *a = ZERO
+	next_instruction = or(ICY5, and(not(CASE_ZERO), ICY4));
+	add:[CL], _ = ADD[CL](ICY:[CL], vdd(), GND[CL-1](), gnd());
+	mux_in = or(RESET, Z(next_instruction));
+	ICY:[CL] = MUX[CL](mux_in , GND[CL](), REG[CL](add:[CL]));
+	
+	// LSL_LPC est la valeur proposee par le mode run pour LPC dans tous les cas
+	// Il faut encore la muxer avec pc_in du monde exterieur si on est dans le cas set_pc
+	LSL_LPC:[AR] = MUX[AR](mux_in, REG[AR](LSL_NEW_LPC:[AR]), REG[AR](LPC:[AR]));
+	CASE_SET_PC = and (not(run), set_pc);
+	
+	// Le program counter PC et les 3 adresses suivantes PC1, PC2, PC3
+	LPC:[AR] = MUX[AR](CASE_SET_PC, pc_in:[AR], LSL_LPC:[AR]);
+	
+	// On calcul toujours PC + 1, PC + 2 (le PC reste sur l'instruction A pendant toute la lecture)
+	LPC1:[AR], _ = ADD[AR](LPC:[AR], GND[AR](), vdd());                  // LPC1 = LPC_OUT + 1
+	LPC2:[AR], _ = ADD[AR](LPC:[AR], gnd(), vdd(), GND[AR-2]() , gnd()); // LPC2 = LPC_OUT + 2
+	LPC3:[AR], _ = ADD[AR](LPC:[AR], vdd(), vdd(), GND[AR-2]() , gnd()); // LPC3 = LPC_OUT + 3
+
+	// Branchement des sorties
+	// Pas de securite de stabilite sur les sorties dans les cas non prevus
+	pc_out:[AR] = ID[AR](LPC:[AR]);
+	data_out:[AR] = ID[AR](Zmem_out:[AR]);
+
 	// clk = id(clk_in); dans le cas ou on porte ce code vers du VHDL
 	clk = id( clock() ); // Dans le cas BEBOP
 	
-// La memoire RAM de la Machine SubLeq 
-word_out:[AR] = ram_MEM(read:[AR], write:[AR], whattodo, word_in:[AR]);
+	// La memoire RAM de la Machine SubLeq 
+	// Utilisee avec un registre pour eviter les cycles combinatoires
+	Zmem_out:[AR] = REG[AR](ram_MEM(Lmem_read[AR-1..0], Lmem_write[AR-1..0], Lmem_mod, Lmem_in:[AR]));
 
+	// La ram &B
+	// Les entrees sont branchees sur la sortie de la memoire
+	// on fait le tri sur les enables
+	Lprb_out:[AR] = ram_PRB(Lprb_mod, Zmem_out[AR-1..0]);
+
+	// La ram *A
+	Lvra_out:[AR] = ram_VRA(Lvra_mod, Zmem_out[AR-1..0]);
+
+	// Pilotage d'ecriture dans les rams &B, *A
+	Lprb_mod = id( ICY3 );
+	Lvra_mod = id( ICY2 );
+
+	// La valeur de la difference *b - *a
+	// La sortie de l'ALU branchee a la sortie des RAMs VRA, et de la sortie du cycle prec
+	// Lsub_out est correcte seulement quand ICY >= 4
+	Lsub_out:[AR] = SUB(Zmem_out:[AR], Lvra_out:[AR]);
+	CASE_ZERO = EQUALS[AR](Lsub_out:[AR], GND[AR]());
+	
+	// Gestion de la memoire MEM : Lmem_read,write, mod, in	
+
+	// 1) Gestion des adresses de lecture et d'ecriture dans le cas RUN = 1
+	// On va toujours ecrire sur les cases memoires pointees par PRB
+	LSL_mem_write_adress:[AR] = ID[AR](Lprb_out:[AR]);
+	
+	// 2) Pour ce qui est de la lecture, ca depend de l'indice du cycle ICY
+	// On utilise un BDD brut.
+	// (0:PC), (1:A), (2:PC1), (3:B), (4:B), (5:PC2), 0000000
+	// La decision ICY (index Cycle) est sur 3 bits car on ne depasse jamais 5 cycles
+	// BDD : il faut 2^CL * AR bits d'entrees, suivis de CL bit de decision
+	LSL_mem_read_adress:[AR] = BDD[2^CL][AR](	LPC:[AR],	// PC : on lit A
+	 						Zmem_out:[AR],	// Zm = A : on lit *A
+							LPC1:[AR],	// PC + 1 : on lit B
+							Zmem_out:[AR],	// Zm = B : on lit *B
+							Lprb_out:[AR],	// B (ecriture dans B de *B - *A)
+							LPC2:[AR],	// PC + 2 (pas dans tous les cas)
+							GND[2*AR](),	// On a donne 6 valeurs AR, il en manque 2
+							ICY:[CL]); 	// bits de decision
+
+	// 2) Gestion de LSL_mem_write_mod : on ecrit seulement et systematiquement au cycle 4
+	LSL_mem_write_mod = id(ICY4);
+	
+	// 3) Quel que soit le cas, on ecrit seulement le resultat de la difference *B - *A 
+	// Ce resultat sera observe seulement quand LSL_mem_write_mod = 1, ie qd ICY >= 4
+	LSL_mem_data_in:[AR] = ID[AR](Lsub_out:[AR]);
+
+	// Multiplexer le pilotage de la ram memoire
+	// Si run = 0, on fournit directement les valeurs de l'entree
+	// Si run = 1, on fournit les valeurs SubLeq d'execution
+	Lmem_read:[AR] =  MUX[AR](run, LSL_mem_read_adress:[AR], read_adress:[AR]);
+	Lmem_write:[AR] = MUX[AR](run, LSL_mem_write_adress:[AR], write_adress:[AR]);
+	Lmem_mod =            mux(run, LSL_mem_write_mod, write);
+	Lmem_in:[AR] =    MUX[AR](run, LSL_mem_data_in:[AR], data_in:[AR]);
 end where;

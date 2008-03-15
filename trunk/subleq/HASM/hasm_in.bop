@@ -5,9 +5,17 @@
 // INPUT_FILE : version en langage Bebop (bop)            //
 // =======================================================//
  
-#define AR 8
+#define AR 4
 
-input = ( a:[AR], b:[AR] );
+// Interface du chip SubLeq avec l'exterieur
+input = (clk_in, run, set_pc, pc_in:[AR], write, read_adress:[AR], write_adress:[AR], data_in:[AR]);
 
-a[0..AR-1] = counter
-b[AR-1..0] = counter
+clk_in = text { 1 }
+run = text { 1 }
+set_pc = text { 0 }
+pc_in:[AR] = text { 0 }
+write = text { 0 }
+read_adress:[AR] = text { 0 }
+write_adress:[AR] = text { 0 }
+data_in:[AR] = text { 0 } 
+
