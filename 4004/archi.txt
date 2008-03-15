@@ -59,24 +59,144 @@ Périphériques
 		(24 pins)
 
 Pinouts
-	Data Bus I/O
-		1	D0
-		2	D1
-		3	D2
-		4	D3
-	GND
-		5	VSS
-	6	Clock phase 1
-	7	Clock phase 2
-	8	Sync-Out
-	9	Reset
-	10	Test
-	Memory Control Output
-		11	CM-ROM
-	-15V
-		12	VDD
-	Memory Control Outputs
-		13	CM-RAM3
-		14	CM-RAM2
-		15	CM-RAM1
-		16	CM-RAM0
+	4004
+		Data Bus I/O
+			1	D0
+			2	D1
+			3	D2
+			4	D3
+		GND
+			5	VSS
+		6	Clock phase 1
+		7	Clock phase 2
+		8	Sync-Out
+		9	Reset
+		10	Test
+		Memory Control Output
+			11	CM-ROM
+		-15V
+			12	VDD
+		Memory Control Outputs
+			13	CM-RAM3
+			14	CM-RAM2
+			15	CM-RAM1
+			16	CM-RAM0
+
+	4001
+		Data Bus I/O
+			1	D0
+			2	D1
+			3	D2
+			4	D3
+		GND
+			5	VSS
+		6	Clock phase 1
+		7	Clock phase 2
+		8	Sync-Input
+		9	Reset
+		Clear Input I/O Lines
+			10	CL
+		Memory Control Input
+			11	CM
+		-15V
+			12	VDD
+		I/O Lines
+			13	IO3
+			14	IO2
+			15	IO1
+			16	IO0
+
+	4002
+		Data Bus I/O
+			1	D0
+			2	D1
+			3	D2
+			4	D3
+		GND
+			5	VSS
+		6	Clock phase 1
+		7	Clock phase 2
+		8	Sync-Input
+		9	Reset
+		Chip Select Input
+			10	P0
+		Memory Control Input
+			11	CM
+		-15V
+			12	VDD
+		I/O Lines
+			13	IO3
+			14	IO2
+			15	IO1
+			16	IO0
+
+	4003
+		Clock Pulse Input
+			1	CP
+		2	Data In
+		3	Q0
+		4	Q1
+		GND
+			5	VSS
+		Parallel Output
+			6	Q2
+			7	Q3
+			8	Q4
+			9	Q5
+			10	Q6
+			11	Q7
+			12	Q8
+			13	Q9
+		-15V
+			14	VDD
+		15	Serial Out
+		16	Enable Input
+
+
+Temps : synchronisation = 8 cycles	A1 A2 A3 M1 M2 X1 X2 X3
+
+Fonctionnement du 4001 #i
+	config :
+		chip number : #i
+		for each pin: pull up/down, positive/inverted
+		content of the memory
+	var :
+		mem[256][8]
+		ioe (SRC)
+		we (MTC)
+		op[4]
+	RESET :
+		unlatch(all)
+		all but mem = 0
+	A3 :
+		we = (CM == 1 et A3 == #i)
+	M1 :
+		si we alors D = mem[A2A1]low
+	M2 :
+		si we alors D = mem[A2A1]high
+		si CM == 1 et ioe == 1 alors op = D sinon op = NOP
+	X2 :
+		si CM == 1 alors ioe = (X2 == #i)
+		si op == RDR alors D = IO
+	X2@2 :
+		si op == WRR alors latch(IO) = D
+
+Fonctionnement du 4002 #i#j
+	var :
+		mem[4][20][4]
+		reg[2]
+		char[4]
+		ioe
+	RESET :
+		unlatch(all)
+		all = 0
+	M2 :
+		si CM == 1 et ioe == 1 alors op = D sinon op = NOP
+	X2 :
+		ioe = (CM == 1 et D3D2 == #j)
+		si CM == 1 alors reg = D1D0
+	X2@2 :
+		si op == WMP alors unlatch(IO), latch(IO) = D
+	X3 :
+		si ioe == 1 alors char = D
+	si op[3] == 1 alors IOR (D = ...) sinon IOW (... = D)
