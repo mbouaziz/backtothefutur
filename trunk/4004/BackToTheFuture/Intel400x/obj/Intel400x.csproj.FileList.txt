@@ -1,0 +1,5 @@
+obj\Debug\ResolveAssemblyReference.cache
+bin\Debug\Intel400x.pdb
+obj\Debug\Intel400x.pdb
+bin\Debug\Intel400x.exe
+obj\Debug\Intel400x.exe
