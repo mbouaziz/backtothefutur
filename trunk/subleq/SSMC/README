@@ -1,0 +1,6 @@
+SSMC : Software Subleq Machine Controller
+ssmc.bpo est la meta definition d'un bloc synchrone externe pour bebop.
+Ce bloc doit pouvoir lire une ram exterieure, la charger dans une machine Subleq dont il a la responsabilite, attendre que le calcul soit termine, et recharger l'image de la ram obtenue.
+ssmc, la version compilee de ssmc.bpo par bopopt est equivalent a la simulation du circuit hsmc (version hardware).
+
+Ceci constitue un substitue au 4004 qui est exactement censé faire ce travail. 

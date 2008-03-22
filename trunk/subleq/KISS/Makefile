@@ -1,14 +1,14 @@
-.SUFFIXES : .cmx .ml .cmi .cmo .mll .mly
-runtestunit : testUnit.cmx bitreader.cmx runtestunit.cmx
-	ocamlopt -o runtestunit testUnit.cmx bitreader.cmx runtestunit.cmx
-testUnit.cmx : testUnit.ml
-	ocamlopt -c testUnit.ml
-.ml.cmx : testUnit.cmx
-	ocamlopt -c $^
-clean : 
-	rm -f *.cmo *.cmi *.cmx *.o
-	rm -f runtestunit
-clean_exe :
-	rm -f runtestunit
-test : runtestunit
-	./runtestunit
+# On utilise la bplib fournie avec bebopframework
+
+LIBDIR = ~/bebop1.0/boplibs/ 
+LIB = bplib.cmxa	
+OTHER = graphics.cmxa	
+
+kiss : kiss.ml
+	ocamlopt -o $@ $(OTHER) -I $(LIBDIR) $(LIB) $<
+
+clean :
+	rm -f *.cmx *.cmi *.o
+
+clean_exe : clean
+	rm -f kiss

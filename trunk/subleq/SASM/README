@@ -1,0 +1,3 @@
+SASM : Software Architecture for a Subleq Machine
+sasm.bpo est une meta definition d'un bloc synchrone externe pour bebop.
+L'idee est que "bopsimu -p hasm.bop" et sasm (version compilee de sasm.bpo par bopopt) soient parfaitement equivalent semantiquement.
