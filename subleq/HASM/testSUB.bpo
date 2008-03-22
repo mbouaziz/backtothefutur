@@ -1,0 +1,30 @@
+// Projet Hasm, Macro bpo pour tester la soustraction
+#source = "ocaml"
+
+#define AR 4
+
+#init %{
+	open Bplib;;
+	(* le mod renvoit des negatifs parfois *)
+	let modpos a n = ((a mod n) + n) mod n;;
+	let len = 2 *$ _AR;;
+	let ss = Array.create _AR false;;
+}%
+
+#test sub ( a:[AR], b:[AR] ) = s:[AR]
+#with code %{
+
+	let ab = BoolArray.to_int a
+	and bb = BoolArray.to_int b
+	in
+	let diff = modpos (ab - bb) len 
+	in
+	BoolArray.load_of_int ss diff;
+	for i = 0 to pred _AR do
+		if ss.(i) <> s.(i)
+		then raise (TEST_FAILURE (true, "testSUB"))
+		else ()
+	done
+	
+
+}%

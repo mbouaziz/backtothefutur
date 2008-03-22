@@ -25,13 +25,13 @@ RAM PC (0, AR)
 // Instruction : SubLeq ( a, b, c)
 // RAMs contenant les valeurs de &a, &b
 // nom Prefixé par P comme "Pointeur"
-RAM PRA (0, AR)
+// RAM PRA (0, AR)
 RAM PRB (0, AR)
 
 // RAMs contenant les valeurs de *a, *b
 // Vx comme "Valeur de x" ( pointee par PRx )
 RAM VRA (0, AR)
-RAM VRB (0, AR)
+// RAM VRB (0, AR)
 
 // Type de la RAM memoire de la machine SubLeq
 // Avec initialisation a partir d'un fichier code binaire pour machine SubLeq

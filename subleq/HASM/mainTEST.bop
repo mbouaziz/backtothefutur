@@ -1,0 +1,59 @@
+// Exemple de meta-code de test de validation de circuit
+// On a un circuit qui realise le ET binaire de 2 
+// entrees electriques
+// boptest this_file : produit un source cible
+// boptestc this_file : produit un executable à piper a simu (bops) 
+
+#source = ocaml  // autre possibilite : = C
+#define CL 3
+
+#RAM ma_super_ram (CL, 2 ^ CL) = text {0bibifricotin1101010  }
+
+// Init : facultatif 
+#init %{
+
+	(* Ceci est du code Ocaml appelle une seule fois *) 
+	let eET a b = a && b;; 
+	
+	Printf.fprintf stdout "La variable CL = %d\n" _CL;; 
+
+	(* On introduit des fonctions qui peuvent nous servir dans la validation *)
+	let reg_maker () = 
+		let d = ref false in
+		(function t -> let o = !d in (d :=t; o));;
+
+	let reg1 = reg_maker ();;
+}%
+
+#test add(a,b,j:[2]:[3]) = (s, c[0..1])   // syntaxe BEBOP pour l'interface
+#with code %{
+	(* { est ce que % ces caracteres vont foutre le {{ % bordel ? *)
+	(* Ceci est du code Ocaml appelle a chaque cycle *)
+	(* il doit etre de type bool signifiant la validation du cycle *)
+	(*
+	s = and(a,b);
+	c[0] = reg(b);
+	c[1] = not(a);
+	*)
+	let jval = 
+	let tot = ref 0 in
+	for i = 1 downto 0 do
+	for k = 2 downto 0 do
+	tot := (2 * !tot) + if j.(i).(k) then 1 else 0;
+	done;
+	done;
+	!tot
+
+	in
+	
+	(* Remarquons qu'on peut ajouter des appels a des prints *)
+	let s' = eET a b in
+	let c0 = reg1 (b) in
+	let c1 = not a in
+	begin
+		Printf.fprintf stdout "jval = %d\n" jval;
+		s' = s && c0 = c.(0) && c1 = c.(1)
+	end
+(* Dans ce corps, on dispose de tous les signaux types selon
+   leur definition : bool, bool array, bool array array, etc... *)
+}%

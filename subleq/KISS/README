@@ -1,0 +1,5 @@
+KISS : Kiss Is a Subleq Simulator
+kiss.ml est un programme qui permet de calculer rapidement (tout en soft) des images ram par le procedé subleq. 
+Idealement, il doit permettre de generer une gamme de ram dont le calcul termine, telles que l'image et l'antécédent soient très différents.
+Une option -g doit etre possible pour un affichage graphique pas a pas.
+(on utilise pour cela la biblioteque bebop Bplib.cmxa.)

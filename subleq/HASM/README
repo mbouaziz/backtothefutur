@@ -1,0 +1,5 @@
+HASM : Harware Architecture for a Subleq Machine
+hasm.bop est un circuit digital en bebop, (une machine SubLeq)
+Les autres fichiers du repertoire sont divers tests bebop pour 
+s'assurer que le circuit est bien correct.
+Hasm est un projet Bebop.
