@@ -16,7 +16,7 @@ LINK = $(BEBOPDIR)/boplibs
 # standards du compilateur, ou biblioteque bebop
 # les biblioteques bebop sont dans $(BEBOPDIR)/libs/
 
-SLIBS = graphics.cmxa
+SLIBS = unix.cmxa graphics.cmxa
 BEBOPLIBS = bplib.cmxa
 
 INCLUDES = $(foreach i, $(BEBOPLIBS), $(LINK)/$i)
@@ -38,10 +38,13 @@ BPOX = $(patsubst %.bpo, %.bpox, $(BPO))
 # regles pour generer les executables en passant par 2 compilations
 
 .bpi.bpix :
+	rm -f $(foreach i, $(PRODUITS) $(TARGET), $(TMP).$(i)) 
 	bopin $< > $(TMP).$(TARGET)
 	$(COMPILATEUR) -o $@ $(SLIBS) -I $(LINK) $(BEBOPLIBS) $(TMP).$(TARGET)
-	rm -f $(TMP).$(TARGET)
+	rm -f $(foreach i, $(PRODUITS) $(TARGET), $(TMP).$(i)) 
+
 .bpo.bpox :
+	rm -f $(foreach i, $(PRODUITS) $(TARGET), $(TMP).$(i)) 
 	bopipe $< > $(TMP).$(TARGET)
 	$(COMPILATEUR) -o $@ $(SLIBS) -I $(LINK) $(BEBOPLIBS) $(TMP).$(TARGET)
 	rm -f $(foreach i, $(PRODUITS) $(TARGET), $(TMP).$(i)) 
