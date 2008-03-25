@@ -1,0 +1,20 @@
+// Projet Hasm, Macro pour inspecter des variables diverses
+#source = "ocaml"
+
+#define AR 4
+#define CL 3
+
+#init %{  }%
+
+#test sub ( _ICY:[CL], _Zmem_out:[AR], _Lprb_out:[AR], _Lvra_out:[AR], _Lsub_out:[AR] )
+
+#with code %{ 
+
+Printf.fprintf stderr "ICY(%d) " (int_of_bits _ICY);
+Printf.fprintf stderr "Zmem_out(%d) " (int_of_bits _Zmem_out);
+Printf.fprintf stderr "&B(%d) " (int_of_bits _Lprb_out);
+Printf.fprintf stderr "*A(%d) " (int_of_bits _Lvra_out);
+Printf.fprintf stderr "SUB(%d)\n" (int_of_bits _Lsub_out);
+flush stderr;
+
+ }%

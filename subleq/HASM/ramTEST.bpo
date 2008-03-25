@@ -7,6 +7,7 @@
 // =======================================================//
 
 #define AR 4
+#define CL 3
 
 #RAM MEM (AR, AR) = file ("subleq.asci")
 
@@ -25,40 +26,54 @@
   (* le tableau qui sert a stocker la sortie de la ram *)
   let sortie = Array.make _AR false;;
 
-  let last_adr_color = ref 0;;
+  let icy = ref 0;;
 }% 
 
-#test sortie_ram (_Lmem_read:[AR], _Lmem_write:[AR], _Lmem_mod, _Lmem_in:[AR]) = _Zmem_out:[AR]
+#test sortie_ram (_ICY:[CL], _Lmem_read:[AR], _Lmem_write:[AR], _Lmem_mod, _Lmem_in:[AR]) = _Zmem_out:[AR]
 #with code %{
   (* La sortie de la ram est passée dans un registre pour éviter les cycles combinatoires *)
  
   (* on calcule la sortie que l'on compare avec celle fournie *)
 
-  _MEM#reset_color !last_adr_color;
-
+  icy := int_of_bits _ICY;
+  if !icy = 0 then _MEM#reset_all_color else ();
+  (
   if _Lmem_mod
   then (* mode ecriture *)
     begin
-      last_adr_color := int_of_bits _Lmem_write;
       _MEM#set_color (int_of_bits _Lmem_write) red;
       _MEM#bwrite _Lmem_write _Lmem_in;
       (* en mode ecriture, on ne change pas la valeur de sortie *)
-      regAR sortie sortie; 
+      (* regAR sortie sortie; *) 
     end	
-  else		
+  else	
+    let col = match !icy with
+	| 0 -> green
+	| 1 -> yellow
+        | 2 -> green
+	| 3 -> magenta
+	| _ -> blue in	
     begin
-      last_adr_color := int_of_bits _Lmem_read;
-      _MEM#set_color (int_of_bits _Lmem_read) green;
+      _MEM#set_color (int_of_bits _Lmem_read) col;
       _MEM#bread _Lmem_read sortie;
       regAR sortie sortie;
     end;
+  );
 
   _MEM#wait;
 
   (* ici, on teste que la sortie de la ram est correcte *)
   for i = 0 to pred _AR do
     if _Zmem_out.(i) <> sortie.(i)
-    then raise (TEST_FAILURE (true, "ramTEST.bpo"))
+    then 
+	begin
+	  Printf.fprintf stderr "SORTIE prevue : ";
+	  for j = 0 to 3 do 
+	  Printf.fprintf stderr "%d" (int_of_bool sortie.(j))
+	  done;
+	  prerr_newline (); 
+	  raise (TEST_FAILURE (false, "ramTEST.bpo"))
+	end
     else ()
   done;
     
