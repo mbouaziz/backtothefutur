@@ -34,10 +34,9 @@ RAM VRA (0, AR)
 // RAM VRB (0, AR)
 
 // Type de la RAM memoire de la machine SubLeq
-// Avec initialisation a partir d'un fichier code binaire pour machine SubLeq
+// Avec initialisation a partir d'un fichier code asci pour machine SubLeq
 // a executer en mode RUN. (architecture 
-RAM MEM (AR, AR) = text { 0000 1000 0100 1100 0010 1010 0110 }
-// = file ("subleq.bin")
+RAM MEM (AR, AR) = file ("subleq.asci")
 
 //========================================================//
 //		STANDARD TEMPLATE LIBRARY		  //
@@ -200,6 +199,7 @@ end where;
 test_SUB( a:[AR], b:[AR] ) = s:[AR]
 where
 	s:[AR] = SUB(a:[AR], b:[AR]);
+	= pipe("./testSUB.bpox -AR $(AR)", a:[AR], b:[AR], s:[AR]);
 end where;
 
 //=======================================================//
@@ -286,7 +286,10 @@ where
 	
 	// La memoire RAM de la Machine SubLeq 
 	// Utilisee avec un registre pour eviter les cycles combinatoires
-	Zmem_out:[AR] = REG[AR](ram_MEM(Lmem_read[AR-1..0], Lmem_write[AR-1..0], Lmem_mod, Lmem_in:[AR]));
+	Zmem_out:[AR] = REG[AR](ram_MEM(Lmem_read:[AR], Lmem_write:[AR], Lmem_mod, Lmem_in:[AR]));
+	
+	// DEBUG PIPE GRAPHICS
+	= pipe("./ramTEST.bpox -CL $(CL)", Lmem_read:[AR], Lmem_write:[AR], Lmem_mod, Lmem_in:[AR], Zmem_out:[AR]);
 
 	// La ram &B
 	// Les entrees sont branchees sur la sortie de la memoire
