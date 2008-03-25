@@ -184,23 +184,11 @@ end where;
 SUB(a : [AR], b : [AR]) = ( r : [AR] )
 where
         r:[AR], _ = ADD[AR](a:[AR], NOT[AR](b:[AR]), vdd());
+	// test de la soustraction
+	= pipe("./testSUB.bpox -AR $(AR)", a:[AR], b:[AR], r:[AR]);
 end where;
 
 //========================================================//
-
-
-//=======================================================//
-//                    TESTS UNITAIRES                    //
-//=======================================================//
-
-// Premier Test : SUB de l'ALU 
-// cheched avec un test exhaustif unitaire le Fri Mar 14 17:47:28 CET 2008 
-// avec la commande : simu -p hasm.bop hasm_in.bop 256 | ./testsub -r 8 
-test_SUB( a:[AR], b:[AR] ) = s:[AR]
-where
-	s:[AR] = SUB(a:[AR], b:[AR]);
-	= pipe("./testSUB.bpox -AR $(AR)", a:[AR], b:[AR], s:[AR]);
-end where;
 
 //=======================================================//
 //           L'INTERFACE DE LA PUCE SUBLEQ               //
@@ -242,6 +230,9 @@ SUBLEQ (
 	= ( ICY:[CL], pc_out:[AR], data_out:[AR], LSL_NEW_LPC:[AR], Lmem_mod, Lmem_read:[AR] )
 with unused = ( clk_in, clk ) // BEBOP
 where
+	// Un peu de debug
+	= pipe("./ICY.bpox -v", ICY:[CL], Zmem_out:[AR], Lprb_out:[AR], Lvra_out:[AR], 	Lsub_out:[AR]);
+
 	// RESET : On est en run = 0 ou on vient de mettre run à 1
 	RESET = or(not(run), and(run, not(reg(run))));
  
@@ -253,7 +244,8 @@ where
 	ICY5 = IS5(ICY:[CL]);
 	
 	// Savoir la valeur proposee pour PC par le mode run dans le cas ou il faut changer
-	LSL_NEW_LPC:[AR] = MUX[AR](ICY5, Zmem_out:[AR], LPC3:[AR]);
+	LSL_NEW_LPC:[AR] = MUX[AR](reg(ICY5), Zmem_out:[AR], REG[AR](LPC3:[AR])); 
+	// reg sur LCP3 pour eviter un cycle
 	
 	// next_instruction designe le fait qu'il faut remettre ICY à 0 pour le prochain cycle
 	// cela correspond exactement au moment ou il faut changer la valeur du PC
@@ -265,7 +257,7 @@ where
 	
 	// LSL_LPC est la valeur proposee par le mode run pour LPC dans tous les cas
 	// Il faut encore la muxer avec pc_in du monde exterieur si on est dans le cas set_pc
-	LSL_LPC:[AR] = MUX[AR](mux_in, REG[AR](LSL_NEW_LPC:[AR]), REG[AR](LPC:[AR]));
+	LSL_LPC:[AR] = MUX[AR](mux_in, LSL_NEW_LPC:[AR], REG[AR](LPC:[AR]));
 	CASE_SET_PC = and (not(run), set_pc);
 	
 	// Le program counter PC et les 3 adresses suivantes PC1, PC2, PC3
@@ -289,15 +281,15 @@ where
 	Zmem_out:[AR] = REG[AR](ram_MEM(Lmem_read:[AR], Lmem_write:[AR], Lmem_mod, Lmem_in:[AR]));
 	
 	// DEBUG PIPE GRAPHICS
-	= pipe("./ramTEST.bpox -CL $(CL)", Lmem_read:[AR], Lmem_write:[AR], Lmem_mod, Lmem_in:[AR], Zmem_out:[AR]);
+	_ = pipe("./ramTEST.bpox -CL $(CL)", ICY:[CL], Lmem_read:[AR], Lmem_write:[AR], Lmem_mod, Lmem_in:[AR], Zmem_out:[AR]);
 
 	// La ram &B
 	// Les entrees sont branchees sur la sortie de la memoire
 	// on fait le tri sur les enables
-	Lprb_out:[AR] = ram_PRB(Lprb_mod, Zmem_out[AR-1..0]);
+	Lprb_out:[AR] = ram_PRB(Lprb_mod, Zmem_out:[AR]);
 
 	// La ram *A
-	Lvra_out:[AR] = ram_VRA(Lvra_mod, Zmem_out[AR-1..0]);
+	Lvra_out:[AR] = ram_VRA(Lvra_mod, Zmem_out:[AR]);
 
 	// Pilotage d'ecriture dans les rams &B, *A
 	Lprb_mod = id( ICY3 );
@@ -307,7 +299,9 @@ where
 	// La sortie de l'ALU branchee a la sortie des RAMs VRA, et de la sortie du cycle prec
 	// Lsub_out est correcte seulement quand ICY >= 4
 	Lsub_out:[AR] = SUB(Zmem_out:[AR], Lvra_out:[AR]);
-	CASE_ZERO = EQUALS[AR](Lsub_out:[AR], GND[AR]());
+
+	// CASE_ZERO : negatif ou nul (complt a 2)
+	CASE_ZERO = or(Lsub_out[AR-1], EQUALS[AR](Lsub_out:[AR], GND[AR]()));
 	
 	// Gestion de la memoire MEM : Lmem_read,write, mod, in	
 

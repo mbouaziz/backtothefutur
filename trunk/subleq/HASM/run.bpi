@@ -1,0 +1,37 @@
+// =======================================================//
+// Projet Systèmes Numériques - ENS, semestre 2           //
+// Mathieu Barbin, Mehdi Bouaziz.                         //
+// HASM : Harware Architecture for a SubLeq Machine       //
+// ramTEST.bpo : debug graphique de la ram subleq         //
+// VERSION : Sat Mar 15 01:05:34 CET 2008                 //
+// =======================================================//
+
+// on va dire a la subleq de se mettre en mode run et voir 
+// ce qui se passe
+#setCPS 1
+
+#define AR 4
+
+#init %{
+	(* pas d'init pour l'instant *)
+	let rand = Random.bool;;
+}%
+
+// on copie l'interface SUBLEQ attendue dans hasm.bop
+#input SUBLEQ (
+	// ENTREES : 
+	clk_in, run, set_pc, pc_in:[AR], write, 
+	read_adress:[AR], write_adress:[AR], data_in:[AR] )
+#where
+	clk_in = unitfun ("fun () -> true");
+	run = unitfun ("fun () -> true");
+	// le reste peut faire n'importe quoi
+	set_pc = unitfun("rand");
+	pc_in = unitfun("rand");
+	write = unitfun("rand");
+	read_adress = unitfun("rand");
+	write_adress = unitfun("rand");
+	data_in = unitfun("rand");
+	
+#end where;
+
