@@ -21,9 +21,6 @@
 // Init  
 #init %{
 
-#load "graphics.cma";;
-#load "classram.cmo";; 
-
   open Graphics;;
 
   let _AR = 4;;
