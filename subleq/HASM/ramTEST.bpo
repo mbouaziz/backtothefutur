@@ -1,0 +1,65 @@
+// =======================================================//
+// Projet Systèmes Numériques - ENS, semestre 2           //
+// Mathieu Barbin, Mehdi Bouaziz.                         //
+// HASM : Harware Architecture for a SubLeq Machine       //
+// ramTEST.bpo : debug graphique de la ram subleq         //
+// VERSION : Sat Mar 15 01:05:34 CET 2008                 //
+// =======================================================//
+
+#define AR 4
+
+#RAM MEM (AR, AR) = file ("subleq.asci")
+
+// Init : facultatif 
+#init %{
+  open_graph " 400x500";;
+  set_window_title "SUBLEQ : RAM MEM";;
+
+  (* on cree une fonction registre de dimension AR *)
+  let reg_maker i = 
+    let t = Array.make i false in
+    (fun b bout -> let bin = Array.copy b in (Array.blit t 0 bout 0 i; Array.blit bin 0 t 0 i));;
+
+  let regAR = reg_maker _AR;;
+
+  (* le tableau qui sert a stocker la sortie de la ram *)
+  let sortie = Array.make _AR false;;
+
+  let last_adr_color = ref 0;;
+}% 
+
+#test sortie_ram (_Lmem_read:[AR], _Lmem_write:[AR], _Lmem_mod, _Lmem_in:[AR]) = _Zmem_out:[AR]
+#with code %{
+  (* La sortie de la ram est passée dans un registre pour éviter les cycles combinatoires *)
+ 
+  (* on calcule la sortie que l'on compare avec celle fournie *)
+
+  _MEM#reset_color !last_adr_color;
+
+  if _Lmem_mod
+  then (* mode ecriture *)
+    begin
+      last_adr_color := int_of_bits _Lmem_write;
+      _MEM#set_color (int_of_bits _Lmem_write) red;
+      _MEM#bwrite _Lmem_write _Lmem_in;
+      (* en mode ecriture, on ne change pas la valeur de sortie *)
+      regAR sortie sortie; 
+    end	
+  else		
+    begin
+      last_adr_color := int_of_bits _Lmem_read;
+      _MEM#set_color (int_of_bits _Lmem_read) green;
+      _MEM#bread _Lmem_read sortie;
+      regAR sortie sortie;
+    end;
+
+  _MEM#wait;
+
+  (* ici, on teste que la sortie de la ram est correcte *)
+  for i = 0 to pred _AR do
+    if _Zmem_out.(i) <> sortie.(i)
+    then raise (TEST_FAILURE (true, "ramTEST.bpo"))
+    else ()
+  done;
+    
+}%
