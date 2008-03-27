@@ -1,0 +1,169 @@
+// =======================================================//
+// Projet Systèmes Numériques - ENS, semestre 2           //
+// Mathieu Barbin, Mehdi Bouaziz.                         //
+// SSMC : software subleq machine controller              //
+// =======================================================//
+
+#define AR 4
+
+#init %{
+
+        open Bplib;;
+  
+	(* le nb de cases memoire de la ram *)
+	let length = 2 *$ _AR;;	
+
+(* 
+	On va utiliser un indicateur d'etat 
+	LOAD k : on charge Ai dans subleq, on en est a ram.(k)
+	WAITING : on est en attente que le subleq termine
+	SAVING k : on sauve le resultat subleq dans ram 
+        NOTHING : on ne fait rien, on attend un RESET
+*)
+	type state = INIT | LOADING of int | WAITING | SAVING of int | NOTHING;;
+	let current_state = ref INIT;;
+
+	let condition_arret = ref false;;
+
+	let old_RESET = ref true;;
+	let real_RESET = ref false;;
+
+}%
+
+#pipe SSMC
+	// ENTREES
+	clk_in, _RESET, _SL_pc_out:[AR], _SL_data_out:[AR], _RP_data_out:[AR] =
+	// SORTIES
+	_SL_clk_in, _SL_run, 
+		_SL_set_pc, _SL_pc_in:[AR], 
+		_SL_write, _SL_read_adress:[AR], _SL_write_adress:[AR], _SL_data_in:[AR],
+	_RP_read_adress:[AR], _RP_write_adress:[AR], _RP_write, _RP_data_in:[AR]
+#with code %{
+
+        (* le vrai RESET, c'est quand il vient juste de passer à RESET *)
+        real_RESET := _RESET && not(!old_RESET);
+        old_RESET := _RESET;
+
+	(* Synchronisation de l'horloge *)
+        _SL_clk_in := clk_in;
+	
+	(* Dans tous les cas, on croise les datas *)
+	Array.blit _SL_data_out 0 _RP_data_in 0 _AR;
+	Array.blit _RP_data_out 0 _SL_data_in 0 _AR;
+
+	(* Test sur la condition d'arret : pc = 1 *)
+	condition_arret := (int_of_bits _SL_pc_out) = 1;
+	Printf.fprintf stderr "PC_OUT (%d) : %s\n" (int_of_bits _SL_pc_out) (BoolArray.to_string _SL_pc_out);
+	flush stderr;
+
+	(* En fonction de ce qu'on est en train de faire *)
+	(* attention au decallage d'un cycle entre ce qu'on demande 
+	   a la ram et au subleq et a leurs reponses *)
+	match !current_state with
+	| INIT -> 
+	    begin
+	      _SL_run := false;
+	      _SL_set_pc := false;
+	      _SL_write := false;
+	      bits_of_int _RP_read_adress 0;
+	      bits_of_int _RP_write_adress 0;
+	      _RP_write := false;
+	      (* au prochain cycle, RP_data_out vaut le mot contenu a l'adresse 0 *)
+	      current_state := LOADING 0
+	    end
+	| LOADING k when k < pred length ->
+	    begin
+	      _SL_run := false;
+	      _SL_set_pc := false;
+	      (* on ecrit dans la subleq *)
+	      _SL_write := true;
+	      bits_of_int _SL_write_adress k;
+	      bits_of_int _SL_read_adress k;
+	      (* on donne l'adresse suivante pour la lecture dans la ram *)
+	      _RP_write := false;
+	      bits_of_int _RP_read_adress (succ k);
+	      bits_of_int _RP_write_adress (succ k);
+	      (* mis a jour de l'etat *)
+	      current_state := LOADING (succ k)
+	    end
+	| LOADING k ->
+	    begin
+	      _SL_run := false;
+	      (* on met le pc a 0 *)
+	      _SL_set_pc := true;
+	      bits_of_int _SL_pc_in 0; 
+	      (* on ecrit le dernier mot dans la subleq *)
+	      _SL_write := true;
+	      bits_of_int _SL_write_adress k;
+	      bits_of_int _SL_read_adress k;
+	      (* On ne s'occupe plus de la ram *)
+	      _RP_write := false;
+	      current_state := WAITING
+	    end
+
+	| WAITING ->
+	    begin
+	      if !condition_arret
+	      then
+		begin
+		  (* on arrete l'execution de la machine *)
+		  _SL_run := false;
+		  _SL_set_pc := false;
+		  _SL_write := false;
+		  (* on demande la lecture de la memoire subleq pour le cycle suivant *)
+		  bits_of_int  _SL_read_adress 0;
+		  bits_of_int  _SL_write_adress 0;
+		  _RP_write := false;
+		  current_state := SAVING 0
+		end
+	      else
+		begin
+		  (* on active la machine subleq *)
+		  _SL_run := true; (* les autres valeurs n'ont plus d'importance *)
+		  (* on protege l'ecriture dans la ram *)
+		  _RP_write := false;
+		  (* on reste dans l'etat waiting *)
+		end
+	    end
+	| SAVING k when k < pred length ->
+	    begin
+	      _SL_run := false;
+	      _SL_set_pc := false;
+	      _SL_write := false;
+	      (* on ecrit dans la ram *)
+	      _RP_write := true;
+	      bits_of_int  _RP_write_adress k;
+	      bits_of_int  _RP_read_adress k;
+	      (* on donne l'adresse suivante pour la lecture dans la subleq *)
+	      bits_of_int  _SL_write_adress (succ k);
+	      bits_of_int  _SL_read_adress (succ k);
+	      (* mis a jour de l'etat *)
+	      current_state := SAVING (succ k)
+	    end 
+	| SAVING k ->
+	    begin (* c'est la sauvegarde du dernier mot memoire *)
+	      _SL_run := false;
+	      _SL_set_pc := false;
+	      _SL_write := false;
+	      (* on ecrit le dernier mot dans la ram *)
+	      _RP_write := true;
+	      bits_of_int _RP_write_adress k;
+	      bits_of_int _RP_read_adress k;
+	      (* On ne s'occupe plus de la subleq *)
+	      current_state := NOTHING
+	    end
+	| NOTHING ->
+	    begin
+	      (* en attente d'un RESET *)
+	      _SL_run := false;
+	      _SL_set_pc := false;
+	      _SL_write := false;
+	      bits_of_int _RP_read_adress 0;
+	      bits_of_int _RP_write_adress 0;
+	      _RP_write := false;
+	      (* Pour redemarrer, on se remet en INIT *)
+	      if !real_RESET then current_state := INIT
+	      else ();
+	    end	
+
+}%

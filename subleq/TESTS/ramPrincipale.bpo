@@ -1,0 +1,37 @@
+// =======================================================//
+// Projet Systèmes Numériques - ENS, semestre 2           //
+// Mathieu Barbin, Mehdi Bouaziz.                         //
+// ramPrincipale.bpo : ram à charger par la procedure     //
+// =======================================================//
+
+#define AR 4
+
+#RAM MEM ( AR, AR ) = file ("load.asci")
+
+#init %{
+	open_graph " 400x500";;
+	set_window_title "RAM PRINCIPALE";;
+	Random.self_init ();;
+	for i = 0 to pred (2 *$ _AR) do
+		_MEM#write i (Random.int (2 *$ _AR));
+	done;;
+}%
+
+#pipe ramPrincipale (read_adress:[AR], write_adress:[AR], write, data_in:[AR]) = data_out:[AR]
+#with code %{
+
+	_MEM#reset_all_color;
+	if write
+	then (* mode ecriture *)
+	  begin
+		_MEM#set_color (int_of_bits write_adress) red;
+		_MEM#bwrite write_adress data_in
+	  end	
+  	else (* mode lecture *)	
+	  begin
+		_MEM#set_color (int_of_bits read_adress) green;
+		_MEM#bread read_adress data_out
+	  end;
+
+	_MEM#draw;
+}%

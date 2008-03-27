@@ -1,4 +1,11 @@
-// Projet Hasm, Macro bpo pour tester la soustraction
+// =======================================================//
+// Projet Systèmes Numériques - ENS, semestre 2           //
+// Mathieu Barbin, Mehdi Bouaziz.                         //
+// HASM : Harware Architecture for a SubLeq Machine       //
+// testSUB.bpo : Macro bpo pour tester la soustraction    //
+// VERSION : jeudi 27 mars 2008, 19:06:38                 //
+// =======================================================//
+
 #source = "ocaml"
 
 #define AR 4
@@ -22,9 +29,8 @@
 	BoolArray.load_of_int ss diff;
 	for i = 0 to pred _AR do
 		if ss.(i) <> s.(i)
+		(* on leve l'exception, en mode bloquant = true *)
 		then raise (TEST_FAILURE (true, "testSUB"))
 		else ()
 	done
-	
-
 }%

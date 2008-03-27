@@ -9,7 +9,7 @@
 #define AR 4
 #define CL 3
 
-#RAM MEM (AR, AR) = file ("subleq.asci")
+#RAM MEM (AR, AR) // = file ("subleq.asci")
 
 #init %{
   open_graph " 400x500";;

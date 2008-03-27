@@ -1,0 +1,118 @@
+// =======================================================//
+// Projet Systèmes Numériques - ENS, semestre 2           //
+// Mathieu Barbin, Mehdi Bouaziz.                         //
+// 'Call me Back to the SubLeq Machine my 4004'	          //
+// =======================================================//
+
+#define AR 4 // Architecture à AR bits
+
+// Registre sur N bits : le design a un beau cycle sinon !
+// Par exemple, on peut decider que le controller a un cycle d'avance
+// sur la ram principale et sur la machine subleq.
+
+REG[N]( a : [N] ) = (s : [N])
+where
+	for i = 0 to N -1
+		s[i] = reg(a[i]);
+	end for;
+end where;
+
+// Comme précisé dans le design.png, on fait jouer le rôle
+// des 3 protagonistes par différents acteurs.
+
+// ====================================================== //
+// =========== Qui est la Machine SubLeq ? ============== //
+// ====================================================== //
+
+SUBLEQ_HASM
+	// ENTREES
+	( clk_in, run, set_pc, pc_in:[AR], write, read_adress:[AR], write_adress:[AR], data_in:[AR] )
+	// SORTIES :
+	= ( pc_out:[AR], data_out:[AR] )
+where
+	// Premiere version : HASM Hardware Architecture for a SubLeq Machine
+	_:[4*AR + 4], pc_out:[AR], data_out:[AR] =
+	pipe("bopsimu hasm.bop -p",
+		clk_in, run, set_pc, pc_in:[AR], write, read_adress:[AR], write_adress:[AR], data_in:[AR]);
+end where;
+
+// ====================================================== //
+
+SUBLEQ_SASM
+	// ENTREES
+	( clk_in, run, set_pc, pc_in:[AR], write, read_adress:[AR], write_adress:[AR], data_in:[AR] )
+	// SORTIES :
+	= ( pc_out:[AR], data_out:[AR] )
+where
+	//  Deuxieme version : SASM Software Architecture for a SubLeq Machine
+	pc_out:[AR], data_out:[AR] =
+	pipe("./../SASM/sasm.bpox",
+		clk_in, run, set_pc, pc_in:[AR], write, read_adress:[AR], write_adress:[AR], data_in:[AR]);
+end where;
+
+// ====================================================== //
+
+// ====================================================== //
+// ============ Qui est le SubLeq Controller ? ========== //
+// ====================================================== //
+
+// Les entrees du SLC sont les sorties de la machine SubLeq, ainsi que les sorties de la ram Principale
+// Les sorties de SLC sont les entrees de la machine SubLeq, ainsi que les entrees de la ram Principale.
+
+// On ajoute une entree RESET pour preciser qu'on veut reinitialiser la procedure.
+// RESET n'est interprete comme tel que si RESET vient de se mettre à 1
+
+SUBLEQ_CONTROLLER_SSMC
+	// ENTREES
+	( clk_in, RESET, SL_pc_out:[AR], SL_data_out:[AR], RP_data_out:[AR] )
+	// SORTIES
+	= ( SL_clk_in, SL_run, 
+		SL_set_pc, SL_pc_in:[AR], 
+		SL_write, SL_read_adress:[AR], SL_write_adress:[AR], SL_data_in:[AR],
+	RP_read_adress:[AR], RP_write_adress:[AR], RP_write, RP_data_in:[AR] )
+where
+	// Premiere version : SSMC Software SubLeq Machine Controller
+	SL_clk_in, SL_run, 
+		SL_set_pc, SL_pc_in:[AR], 
+		SL_write, SL_read_adress:[AR], SL_write_adress:[AR], SL_data_in:[AR],
+	RP_read_adress:[AR], RP_write_adress:[AR], RP_write, RP_data_in:[AR]
+	= pipe("./../SSMC/ssmc.bpox", clk_in, RESET, SL_pc_out:[AR], SL_data_out:[AR], RP_data_out:[AR]);
+end where;
+
+// ====================================================== //
+
+// ====================================================== //
+// ============ Qui est la ram principale ? ============= //
+// ====================================================== //
+
+// on utilise une ram exterieure graphique pour bien voir ce qui se passe.
+
+RAM_EXTERNE ( read_adress:[AR], write_adress:[AR], write, data_in:[AR] ) = data_out:[AR]
+where
+	data_out:[AR] = pipe("./ramPrincipale.bpox -AR $(AR)", read_adress:[AR], write_adress:[AR], write, data_in:[AR]);
+end where;
+
+// ====================================================== //
+
+// ====================================================== //
+// ======== Une instance de test en exemple ============= //
+// ====================================================== //
+
+// FirstTest = RAM_EXTERNE + SUBLEQ_HASM + SUBLEQ_CONTROLLER_SSMC
+
+FirstTest (RESET) = ()
+where
+	clk_in = vdd ();
+
+	RP_data_out:[AR] = REG[AR] ( RAM_EXTERNE (RP_read_adress:[AR], RP_write_adress:[AR], RP_write, RP_data_in:[AR]) );
+
+	SL_pc_out:[AR], SL_data_out:[AR] = REG[2 * AR] ( SUBLEQ_HASM
+		( SL_clk_in, SL_run, SL_set_pc, SL_pc_in:[AR], 
+			SL_write, SL_read_adress:[AR], SL_write_adress:[AR], SL_data_in:[AR] ));
+
+	SL_clk_in, SL_run, 
+		SL_set_pc, SL_pc_in:[AR], 
+		SL_write, SL_read_adress:[AR], SL_write_adress:[AR], SL_data_in:[AR],
+	RP_read_adress:[AR], RP_write_adress:[AR], RP_write, RP_data_in:[AR] = SUBLEQ_CONTROLLER_SSMC
+		( clk_in, RESET, SL_pc_out:[AR], SL_data_out:[AR], RP_data_out:[AR] );
+end where;

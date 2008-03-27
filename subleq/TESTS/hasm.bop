@@ -183,7 +183,7 @@ SUB(a : [AR], b : [AR]) = ( r : [AR] )
 where
         r:[AR], _ = ADD[AR](a:[AR], NOT[AR](b:[AR]), vdd());
 	// test de la soustraction
-	= pipe("./testSUB.bpox -AR $(AR)", a:[AR], b:[AR], r:[AR]);
+//	= pipe("./testSUB.bpox -AR $(AR)", a:[AR], b:[AR], r:[AR]);
 end where;
 
 //========================================================//
@@ -229,7 +229,7 @@ SUBLEQ (
 with unused = ( clk_in, clk ) // BEBOP
 where
 	// Un peu de debug
-	= pipe("./ICY.bpox -v", LPC:[AR], ICY:[CL], Zmem_out:[AR], mem_out:[AR], Lprb_out:[AR], Lvra_out:[AR], 	Lsub_out:[AR]);
+//	= pipe("./ICY.bpox -v", LPC:[AR], ICY:[CL], Zmem_out:[AR], mem_out:[AR], Lprb_out:[AR], Lvra_out:[AR], 	Lsub_out:[AR]);
 
 	// RESET : On est en run = 0 ou on vient de mettre run à 1
 	RESET = or(not(run), and(run, not(reg(run))));
@@ -269,6 +269,7 @@ where
 
 	// Branchement des sorties
 	// Pas de securite de stabilite sur les sorties dans les cas non prevus
+	= pipe("./pcout.bpox", pc_out:[AR], LPC:[AR]);
 	pc_out:[AR] = ID[AR](LPC:[AR]);
 	data_out:[AR] = ID[AR](mem_out:[AR]);
 

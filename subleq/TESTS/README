@@ -1,0 +1,9 @@
+Une premiere version est née !
+projet.bop est un circuit illustrant le design explicité dans le beau dessin.
+il fait appel a une instance d'un trio sympatique.
+A savoir : 
+une ram exterieure jouée par une pipe01 produit en bpo
+le SSMC pour controler le subleq
+et le vrai circuit Hasm qui tourne, avec une debug graphique.
+
+C'est assez rigolo a voir.
