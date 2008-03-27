@@ -1,0 +1,18 @@
+#setCPS 10
+
+#init %{
+	let alarm i = 
+	let d = ref 0 in
+	fun () -> 
+	  incr(d);
+	  if !d >= i
+	  then (d:=0; true)
+	  else false;;
+
+	let alarm100 = alarm 100;;
+}%
+
+#input RESET0 a
+#where
+	a = unitfun ("alarm100");
+#end where;

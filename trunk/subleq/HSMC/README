@@ -1,4 +1,4 @@
 HSMC : Hardware Subleq Machine Controller
-hsmc.bop est un circuit digital synchrone qui est specialement dédié a la cqui est donnée au 4004 : charger la ram exterieure, attendre le calcul, et recharger l'image resultat.
+hsmc.bop est un circuit digital synchrone qui est specialement dédié a la charge qui est donnée au 4004 : charger la ram exterieure, attendre le calcul, et recharger l'image resultat.
 Son developpement est facultatif.
 Pour des tests, on utilisera plutot ssmc.bpo qui est sa version bloc externe pour bebop.

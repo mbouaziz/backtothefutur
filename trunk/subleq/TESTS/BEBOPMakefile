@@ -1,0 +1,67 @@
+# ==================================================== #
+# ================== BEBOP FRAMEWORK ================= #
+# ==================================================== #
+
+# Mathieu Barbin, jeudi 27 mars 2008, 18:42:58
+
+# Makefile générique pour les fichiers BP(I|O)
+# Macro génération des executables pipe01
+# En passant par des .ml temporaires (bopin, bopipe)
+
+BPI = $(wildcard *.bpi)
+BPO = $(wildcard *.bpo)
+
+.SUFFIXES : .bpi .bpo .bpix .bpox
+
+# Ou se trouve le dossier Bebop pour trouver les librairies
+
+BEBOPDIR = ~/bebop1.0
+LINK = $(BEBOPDIR)/boplibs
+
+# biblioteques : selon les fonctions utilisees dans les bp
+# standards du compilateur, ou biblioteque bebop
+# les biblioteques bebop sont dans $(BEBOPDIR)/boplibs/
+
+SLIBS = unix.cmxa graphics.cmxa
+BEBOPLIBS = bplib.cmxa
+
+INCLUDES = $(foreach i, $(BEBOPLIBS), $(LINK)/$i)
+
+# target et compilateur : selon l'option choisie dans les bp
+
+TARGET = ml
+PRODUITS = cmx cmi o
+COMPILATEUR = ocamlopt
+TMP = _tmp
+
+# fichiers produits :
+
+BPIX = $(patsubst %.bpi, %.bpix, $(BPI))
+BPOX = $(patsubst %.bpo, %.bpox, $(BPO))
+
+# Apres installation, bopin et bopipe sont dans accessibles dans le PATH
+
+# regles pour generer les executables en passant par 2 compilations
+
+.bpi.bpix :
+	rm -f $(foreach i, $(PRODUITS) $(TARGET), $(TMP).$(i)) 
+	bopin $< > $(TMP).$(TARGET)
+	$(COMPILATEUR) -o $@ $(SLIBS) -I $(LINK) $(BEBOPLIBS) $(TMP).$(TARGET)
+	rm -f $(foreach i, $(PRODUITS) $(TARGET), $(TMP).$(i)) 
+
+.bpo.bpox :
+	rm -f $(foreach i, $(PRODUITS) $(TARGET), $(TMP).$(i)) 
+	bopipe $< > $(TMP).$(TARGET)
+	$(COMPILATEUR) -o $@ $(SLIBS) -I $(LINK) $(BEBOPLIBS) $(TMP).$(TARGET)
+	rm -f $(foreach i, $(PRODUITS) $(TARGET), $(TMP).$(i)) 
+
+all : $(BPIX) $(BPOX)
+
+clean :
+	rm -f *.cmx *.cmo *.cmi $(TMP).*
+	rm -f $(BPIX) $(BPOX)
+
+clean_exe :
+	rm -f $(BPIX) $(BPOX)
+
+uninstall : clean
