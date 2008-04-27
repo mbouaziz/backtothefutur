@@ -1,4 +1,5 @@
 using System;
+using Electronics;
 
 namespace Intel400x
 {
@@ -10,7 +11,7 @@ namespace Intel400x
         IO3, IO2, IO1, IO0
     }
 
-    public class Intel4001 : Component<Pins4001>
+    public class Intel4001 : AsyncComponent<Pins4001>
     {
         int index;
         PinsGroup D, IO;
@@ -18,15 +19,15 @@ namespace Intel400x
         Intel4001 (int index, string name, Signal[] signals) : base(name, signals)
         {
             this.index = index;
-            pins[(int)Pins4001.Clk1].ondown += onclk1down;
-            pins[(int)Pins4001.Clk2].ondown += onclk2down;
-            pins[(int)Pins4001.Clk2].onup += onclk2up;
-            pins[(int)Pins4001.Reset].ondown += onresetdown;
-            pins[(int)Pins4001.Sync].ondown += onsyncdown;
+            Pins[(int)Pins4001.Clk1].ondown += onclk1down;
+            Pins[(int)Pins4001.Clk2].ondown += onclk2down;
+            Pins[(int)Pins4001.Clk2].onup += onclk2up;
+            Pins[(int)Pins4001.Reset].ondown += onresetdown;
+            Pins[(int)Pins4001.Sync].ondown += onsyncdown;
             D = makePinsGroup("D", (int)Pins4001.D0, (int)Pins4001.D3);
             IO = makePinsGroup("IO", (int)Pins4001.IO0, (int)Pins4001.IO3);
         }
-        public override string familyname
+        public override string FamilyName
         {
             get { return "4001"; }
         }
@@ -42,12 +43,12 @@ namespace Intel400x
 
         void onresetdown()
         {
+            foreach (Pin pin in Pins)
+                pin.unlatch();
             addr = 0;
             op = 0;
             CSE = false;
             IOE = false;
-            foreach (Pin pin in pins)
-                pin.unlatch();
         }
         void onclk1down()
         {
@@ -79,13 +80,13 @@ namespace Intel400x
                     addr |= D.value << 4;
                     break;
                 case Cycle4004.A3:
-                    CSE = pins[(int)Pins4001.CM].value && D.value == index;
+                    CSE = Pins[(int)Pins4001.CM].value && D.value == index;
                     break;
                 case Cycle4004.M2:
-                    op = (pins[(int)Pins4001.CM].value && IOE) ? (IOOperations)D.value : IOOperations.NOP;
+                    op = (Pins[(int)Pins4001.CM].value && IOE) ? (IOOperations)D.value : IOOperations.NOP;
                     break;
                 case Cycle4004.X2:
-                    if (pins[(int)Pins4001.CM].value)
+                    if (Pins[(int)Pins4001.CM].value)
                         IOE = (D.value == index);
                     if (op == IOOperations.WRR)
                         IO.latch(D.value);  // why here ? when unlatched ?
