@@ -11,7 +11,7 @@
         open Bplib;;
   
 	(* le nb de cases memoire de la ram *)
-	let length = 2 *$ _AR;;	
+	let length = 2 $$ _AR;;	
 
 (* 
 	On va utiliser un indicateur d'etat 
@@ -37,7 +37,7 @@
 	_SL_clk_in, _SL_run, 
 		_SL_set_pc, _SL_pc_in:[AR], 
 		_SL_write, _SL_read_adress:[AR], _SL_write_adress:[AR], _SL_data_in:[AR],
-	_RP_read_adress:[AR], _RP_write_adress:[AR], _RP_write, _RP_data_in:[AR]
+	_RP_read_adress:[AR], _RP_write_adress:[AR], _RP_write, _RP_data_in:[AR], _NOTHING
 #with code %{
 
         (* le vrai RESET, c'est quand il vient juste de passer à RESET *)
@@ -46,6 +46,9 @@
 
 	(* Synchronisation de l'horloge *)
         _SL_clk_in := clk_in;
+
+        (* Bit du NOTHING *)
+        _NOTHING := !current_state = NOTHING;
 	
 	(* Dans tous les cas, on croise les datas *)
 	Array.blit _SL_data_out 0 _RP_data_in 0 _AR;
@@ -100,7 +103,6 @@
 	      _RP_write := false;
 	      current_state := WAITING
 	    end
-
 	| WAITING ->
 	    begin
 	      if !condition_arret
