@@ -6,6 +6,12 @@
 
 #define AR 4 // Architecture à AR bits
 
+#define HASM 1
+#define SASM 2
+
+#define SSMC 3
+#define LB4S 4
+
 // Registre sur N bits : le design a un beau cycle sinon !
 // Par exemple, on peut decider que le controller a un cycle d'avance
 // sur la ram principale et sur la machine subleq.
@@ -69,13 +75,13 @@ SUBLEQ_CONTROLLER_SSMC
 	= ( SL_clk_in, SL_run, 
 		SL_set_pc, SL_pc_in:[AR], 
 		SL_write, SL_read_adress:[AR], SL_write_adress:[AR], SL_data_in:[AR],
-	RP_read_adress:[AR], RP_write_adress:[AR], RP_write, RP_data_in:[AR] )
+	RP_read_adress:[AR], RP_write_adress:[AR], RP_write, RP_data_in:[AR], NOTHING )
 where
 	// Premiere version : SSMC Software SubLeq Machine Controller
 	SL_clk_in, SL_run, 
 		SL_set_pc, SL_pc_in:[AR], 
 		SL_write, SL_read_adress:[AR], SL_write_adress:[AR], SL_data_in:[AR],
-	RP_read_adress:[AR], RP_write_adress:[AR], RP_write, RP_data_in:[AR]
+	RP_read_adress:[AR], RP_write_adress:[AR], RP_write, RP_data_in:[AR], NOTHING
 	= pipe("./../SSMC/ssmc.bpox", clk_in, RESET, SL_pc_out:[AR], SL_data_out:[AR], RP_data_out:[AR]);
 end where;
 
@@ -87,9 +93,9 @@ end where;
 
 // on utilise une ram exterieure graphique pour bien voir ce qui se passe.
 
-RAM_EXTERNE ( read_adress:[AR], write_adress:[AR], write, data_in:[AR] ) = data_out:[AR]
+RAM_EXTERNE ( read_adress:[AR], write_adress:[AR], write, data_in:[AR], NOTHING ) = data_out:[AR], ready
 where
-	data_out:[AR] = pipe("./ramPrincipale.bpox -AR $(AR)", read_adress:[AR], write_adress:[AR], write, data_in:[AR]);
+	data_out:[AR], ready = pipe("./ramPrincipale.bpox -AR $(AR)", read_adress:[AR], write_adress:[AR], write, data_in:[AR], NOTHING);
 end where;
 
 // ====================================================== //
@@ -100,11 +106,12 @@ end where;
 
 // FirstTest = RAM_EXTERNE + SUBLEQ_HASM + SUBLEQ_CONTROLLER_SSMC
 
-FirstTest (RESET) = ()
+FirstTest (RESET_ext) = ()
 where
 	clk_in = clock ();
+        RESET = and(RESET_ext, RAMready);
 
-	RP_data_out:[AR] = REG[AR] ( RAM_EXTERNE (RP_read_adress:[AR], RP_write_adress:[AR], RP_write, RP_data_in:[AR]) );
+	RP_data_out:[AR], RAMready = REG[AR+1] ( RAM_EXTERNE (RP_read_adress:[AR], RP_write_adress:[AR], RP_write, RP_data_in:[AR], NOTHING) );
 
 	SL_pc_out:[AR], SL_data_out:[AR] = REG[2 * AR] ( SUBLEQ_HASM
 		( SL_clk_in, SL_run, SL_set_pc, SL_pc_in:[AR], 
@@ -113,6 +120,6 @@ where
 	SL_clk_in, SL_run, 
 		SL_set_pc, SL_pc_in:[AR], 
 		SL_write, SL_read_adress:[AR], SL_write_adress:[AR], SL_data_in:[AR],
-	RP_read_adress:[AR], RP_write_adress:[AR], RP_write, RP_data_in:[AR] = SUBLEQ_CONTROLLER_SSMC
+	RP_read_adress:[AR], RP_write_adress:[AR], RP_write, RP_data_in:[AR], NOTHING = SUBLEQ_CONTROLLER_SSMC
 		( clk_in, RESET, SL_pc_out:[AR], SL_data_out:[AR], RP_data_out:[AR] );
 end where;
