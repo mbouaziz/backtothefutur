@@ -8,7 +8,7 @@
 // =======================================================//
 
 // Reglage de la frequence du simulateur (simu)
-#setCPS 1024
+// #setCPS 1024
 
 //architecture a n bits (à determiner)
 #define AR 4

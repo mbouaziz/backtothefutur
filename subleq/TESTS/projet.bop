@@ -31,7 +31,7 @@ SUBLEQ_HASM
 	= ( pc_out:[AR], data_out:[AR] )
 where
 	// Premiere version : HASM Hardware Architecture for a SubLeq Machine
-	_:[4*AR + 4], pc_out:[AR], data_out:[AR] =
+	pc_out:[AR], data_out:[AR] =
 	pipe("bopsimu hasm.bop -p",
 		clk_in, run, set_pc, pc_in:[AR], write, read_adress:[AR], write_adress:[AR], data_in:[AR]);
 end where;
@@ -102,7 +102,7 @@ end where;
 
 FirstTest (RESET) = ()
 where
-	clk_in = vdd ();
+	clk_in = clock ();
 
 	RP_data_out:[AR] = REG[AR] ( RAM_EXTERNE (RP_read_adress:[AR], RP_write_adress:[AR], RP_write, RP_data_in:[AR]) );
 
