@@ -1,0 +1,22 @@
+// ==================================================================== //
+// =================== BEBOP SAMPLES : BOPREZO ======================== //
+// ==================================================================== //
+
+// Circuit côté client : on fait une simulation qui dépend de 3 serveurs
+// La machine test s'appelle ubuntu : remplacer par le nom de votre machine
+// ou son adresse inet
+
+#define AdInet01 "ubuntu" // on peut faire reference par le hostname
+#define AdInet02 "127.0.1.1" // ou par l'adresse internet
+
+#define Port01 1401
+#define Port02 1402
+#define Port03 1403
+
+client (a, b) = s1, s2, s3
+where
+  // avec la syntaxe $(var) on accede aux variables des #define
+  s1 = pipe("boprezo $(AdInet01) $(Port01)", a, b);
+  s2 = pipe("boprezo $(AdInet02) $(Port02)", a, b);
+  s3 = pipe("boprezo $(AdInet01) $(Port03)", a, b);
+end where;
