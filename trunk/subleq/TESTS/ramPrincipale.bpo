@@ -9,29 +9,91 @@
 #RAM MEM ( AR, AR ) = file ("load.asci")
 
 #init %{
-	open_graph " 400x500";;
-	set_window_title "RAM PRINCIPALE";;
-	Random.self_init ();;
-	for i = 0 to pred (2 *$ _AR) do
-		_MEM#write i (Random.int (2 *$ _AR));
-	done;;
+  open_graph " 400x500";;
+  set_window_title "RAM PRINCIPALE";;
+
+  exception FinDeLaSerie;;
+
+  (* On veut charger tour a tour les ram qui composent une série *)
+  let serie_name      = "class4/class";;
+  let num_chiffres = 2;;
+  let num_ram = 30;;
+  let sauvegarde_name = "class4/imSim_01_";; 
+  
+  let index_ram_serie = ref 0;;
+  
+  let int_d d i = 
+    let j = string_of_int i in
+    let len = String.length j in
+    if len >= d
+    then String.sub j (len - d) d
+    else Printf.sprintf "%s%s" (String.make (d - len) '0') j;;
+  
+  let next_ram () =
+    begin
+      incr(index_ram_serie);
+      if !index_ram_serie > num_ram
+      then raise FinDeLaSerie
+      else
+        let source_file = Printf.sprintf "%s%s" serie_name (int_d num_chiffres (!index_ram_serie)) in
+        let save_file = Printf.sprintf "%s%s" sauvegarde_name (int_d num_chiffres (!index_ram_serie - 1)) in
+        (* sauver l'etat courant de la memoire *)
+        if (!index_ram_serie) > 1
+        then 
+          begin
+            Printf.fprintf stderr "[ ->> ] Sauvegarde RAM ->> \"%s\"\n" save_file;
+            flush stderr;
+            _MEM#to_asci_file save_file
+          end
+        else ();
+        (* charger la prochaine *)
+        Printf.fprintf stderr "[ <<- ] Chargement RAM <<- \"%s\"\n" source_file;
+        flush stderr;
+        _MEM#load_asci_file source_file
+    end;; 
+
+
+  next_ram ();;
+
+  (*
+    Random.self_init ();;
+    for i = 0 to pred (2 $$ _AR) do
+    _MEM#write i (Random.int (2 $$ _AR));
+    done;;
+  *)
+  
+  let was_nothing = ref false;; 
 }%
 
-#pipe ramPrincipale (read_adress:[AR], write_adress:[AR], write, data_in:[AR]) = data_out:[AR]
+#pipe ramPrincipale (read_adress:[AR], write_adress:[AR], write, data_in:[AR], _NOTHING) = data_out:[AR], ready
 #with code %{
+  
+  let reset = _NOTHING && (not (!was_nothing)) in
+  was_nothing := _NOTHING;
 
-	_MEM#reset_all_color;
-	if write
-	then (* mode ecriture *)
-	  begin
-		_MEM#set_color (int_of_bits write_adress) red;
-		_MEM#bwrite write_adress data_in
-	  end	
-  	else (* mode lecture *)	
-	  begin
-		_MEM#set_color (int_of_bits read_adress) green;
-		_MEM#bread read_adress data_out
-	  end;
+  if reset then (Printf.fprintf stderr "RESET !!\n"; flush stderr) else ();
 
-	_MEM#draw;
+  _MEM#reset_all_color;
+  if write
+  then (* mode ecriture *)
+    begin
+      _MEM#set_color (int_of_bits write_adress) red;
+      _MEM#bwrite write_adress data_in
+    end	
+  else (* mode lecture *)	
+    begin
+      _MEM#set_color (int_of_bits read_adress) green;
+      _MEM#bread read_adress data_out
+    end;
+  
+  _MEM#draw;
+
+
+  (* dans ce cas présent, on est tout le temps ready, puisqu'on bloque l'execution jusqu'a a avoir chargé
+     la prochaine ram dont on veut calculer l'image *)
+
+  ready := true;
+  if reset then next_ram () else ();
+
+
 }%

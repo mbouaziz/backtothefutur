@@ -269,7 +269,7 @@ where
 
 	// Branchement des sorties
 	// Pas de securite de stabilite sur les sorties dans les cas non prevus
-	= pipe("./pcout.bpox", pc_out:[AR], LPC:[AR]);
+//	= pipe("./pcout.bpox", pc_out:[AR], LPC:[AR]);
 	pc_out:[AR] = ID[AR](LPC:[AR]);
 	data_out:[AR] = ID[AR](mem_out:[AR]);
 
