@@ -1,0 +1,5 @@
+E:\ens\L3_S2\systemes_numeriques\backtothefutur\4004\BackToTheFuture\Electronics\bin\Debug\Electronics.dll
+E:\ens\L3_S2\systemes_numeriques\backtothefutur\4004\BackToTheFuture\Electronics\bin\Debug\Electronics.pdb
+E:\ens\L3_S2\systemes_numeriques\backtothefutur\4004\BackToTheFuture\Electronics\obj\Debug\ResolveAssemblyReference.cache
+E:\ens\L3_S2\systemes_numeriques\backtothefutur\4004\BackToTheFuture\Electronics\obj\Debug\Electronics.dll
+E:\ens\L3_S2\systemes_numeriques\backtothefutur\4004\BackToTheFuture\Electronics\obj\Debug\Electronics.pdb

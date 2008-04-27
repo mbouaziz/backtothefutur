@@ -3,6 +3,10 @@ Microsoft Visual Studio Solution File, Format Version 9.00
 # Visual Studio 2005
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Intel400x", "Intel400x\Intel400x.csproj", "{3D8912D0-DCA5-4998-8580-EE31264152B6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{AF3AF736-0CF1-4D16-A762-999DDA00146F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Electronics", "Electronics\Electronics.csproj", "{4086EFD6-34EE-4BFA-BE4A-8C5C63B26E5B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -13,6 +17,14 @@ Global
 		{3D8912D0-DCA5-4998-8580-EE31264152B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3D8912D0-DCA5-4998-8580-EE31264152B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3D8912D0-DCA5-4998-8580-EE31264152B6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AF3AF736-0CF1-4D16-A762-999DDA00146F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AF3AF736-0CF1-4D16-A762-999DDA00146F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AF3AF736-0CF1-4D16-A762-999DDA00146F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AF3AF736-0CF1-4D16-A762-999DDA00146F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4086EFD6-34EE-4BFA-BE4A-8C5C63B26E5B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4086EFD6-34EE-4BFA-BE4A-8C5C63B26E5B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4086EFD6-34EE-4BFA-BE4A-8C5C63B26E5B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4086EFD6-34EE-4BFA-BE4A-8C5C63B26E5B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -4,11 +4,11 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.50727</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{3D8912D0-DCA5-4998-8580-EE31264152B6}</ProjectGuid>
+    <ProjectGuid>{4086EFD6-34EE-4BFA-BE4A-8C5C63B26E5B}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Electronics</RootNamespace>
-    <AssemblyName>Intel400x</AssemblyName>
+    <AssemblyName>Electronics</AssemblyName>
     <StartupObject>
     </StartupObject>
   </PropertyGroup>
@@ -35,16 +35,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="4001.cs" />
-    <Compile Include="4002.cs" />
-    <Compile Include="4004.cs" />
+    <Compile Include="Component.cs" />
+    <Compile Include="ComponentServer.cs" />
+    <Compile Include="NetComponent.cs" />
+    <Compile Include="Pin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Electronics\Electronics.csproj">
-      <Project>{4086EFD6-34EE-4BFA-BE4A-8C5C63B26E5B}</Project>
-      <Name>Electronics</Name>
-    </ProjectReference>
+    <Compile Include="Signal.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

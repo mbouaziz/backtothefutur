@@ -1,0 +1,7 @@
+E:\ens\L3_S2\systemes_numeriques\backtothefutur\4004\BackToTheFuture\Intel400x\obj\Debug\Intel400x.pdb
+E:\ens\L3_S2\systemes_numeriques\backtothefutur\4004\BackToTheFuture\Intel400x\obj\Debug\ResolveAssemblyReference.cache
+E:\ens\L3_S2\systemes_numeriques\backtothefutur\4004\BackToTheFuture\Intel400x\bin\Debug\Intel400x.pdb
+E:\ens\L3_S2\systemes_numeriques\backtothefutur\4004\BackToTheFuture\Intel400x\bin\Debug\Intel400x.dll
+E:\ens\L3_S2\systemes_numeriques\backtothefutur\4004\BackToTheFuture\Intel400x\obj\Debug\Intel400x.dll
+E:\ens\L3_S2\systemes_numeriques\backtothefutur\4004\BackToTheFuture\Intel400x\bin\Debug\Electronics.dll
+E:\ens\L3_S2\systemes_numeriques\backtothefutur\4004\BackToTheFuture\Intel400x\bin\Debug\Electronics.pdb
