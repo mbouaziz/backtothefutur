@@ -1,22 +1,16 @@
 // ==================================================================== //
-// =================== BEBOP SAMPLES : BOPREZO ======================== //
+// ===================== Projet 4004-Subleq =========================== //
 // ==================================================================== //
 
-// Circuit côté client : on fait une simulation qui dépend de 3 serveurs
-// La machine test s'appelle ubuntu : remplacer par le nom de votre machine
-// ou son adresse inet
+// On fait un test de bopway, avec une porte ET sous .Net
+// Qui passe par une passerelle bopway
 
-#define AdInet01 "ubuntu" // on peut faire reference par le hostname
-#define AdInet02 "127.0.1.1" // ou par l'adresse internet
-
+#define AdInet01 "felouque" // on peut faire reference par le hostname
 #define Port01 1401
-#define Port02 1402
-#define Port03 1403
 
-client (a, b) = s1, s2, s3
+bebop_appel_dot_net (a, b) = s
 where
   // avec la syntaxe $(var) on accede aux variables des #define
-  s1 = pipe("boprezo $(AdInet01) $(Port01)", a, b);
-  s2 = pipe("boprezo $(AdInet02) $(Port02)", a, b);
-  s3 = pipe("boprezo $(AdInet01) $(Port03)", a, b);
+  sortie_dot_net = pipe("boprezo $(AdInet01) $(Port01)", a, b);
+  s = not ( sortie_dot_net );
 end where;

@@ -15,10 +15,10 @@
   exception FinDeLaSerie;;
 
   (* On veut charger tour a tour les ram qui composent une série *)
-  let serie_name      = "class4/class";;
+  let serie_name      = "class/cla";;
   let num_chiffres = 2;;
   let num_ram = 30;;
-  let sauvegarde_name = "class4/imSim_01_";; 
+  let sauvegarde_name = "class/imgSim";; 
   
   let index_ram_serie = ref 0;;
   
