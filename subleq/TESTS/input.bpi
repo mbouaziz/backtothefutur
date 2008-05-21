@@ -1,4 +1,4 @@
-#setCPS 99
+#setCPS 40
 
 #init %{
 	let alarm i = 

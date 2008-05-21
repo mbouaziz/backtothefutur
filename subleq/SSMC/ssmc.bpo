@@ -4,7 +4,7 @@
 // SSMC : software subleq machine controller              //
 // =======================================================//
 
-#define AR 4
+#sysargv AR
 
 #init %{
 
