@@ -14,11 +14,11 @@
 	open Bplib;;
 	(* le mod renvoit des negatifs parfois *)
 	let modpos a n = ((a mod n) + n) mod n;;
-	let len = 2 *$ _AR;;
+	let len = 2 $$ _AR;;
 	let ss = Array.create _AR false;;
 }%
 
-#test sub ( a:[AR], b:[AR] ) = s:[AR]
+#test ( a:[AR], b:[AR], s:[AR] ) = ()
 #with code %{
 
 	let ab = BoolArray.to_int a
