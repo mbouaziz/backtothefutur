@@ -30,7 +30,7 @@
   let was_write = [|false|];;
 }% 
 
-#test sortie_ram (_ICY:[CL], _Lmem_read:[AR], _Lmem_write:[AR], _Lmem_mod, _Lmem_in:[AR]) = _Zmem_out:[AR]
+#test (_ICY:[CL], _Lmem_read:[AR], _Lmem_write:[AR], _Lmem_mod, _Lmem_in:[AR], _Zmem_out:[AR] ) = ()
 #with code %{
   (* La sortie de la ram est passée dans un registre pour éviter les cycles combinatoires *)
  

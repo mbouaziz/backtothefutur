@@ -6,7 +6,7 @@
 
 #init %{  }%
 
-#test sub ( _LPC:[AR], _ICY:[CL], _Zmem_out:[AR], _mem_out:[AR], _Lprb_out:[AR], _Lvra_out:[AR], _Lsub_out:[AR] )
+#test ( _LPC:[AR], _ICY:[CL], _Zmem_out:[AR], _mem_out:[AR], _Lprb_out:[AR], _Lvra_out:[AR], _Lsub_out:[AR] ) = ()
 
 #with code %{ 
 Printf.fprintf stderr "LPC(%d) " (int_of_bits _LPC);

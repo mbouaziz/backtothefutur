@@ -2,8 +2,7 @@
 
 #define AR 4
 
-#test pc ( pc_out:[AR], _LPC:[AR] )
-
+#test ( pc_out:[AR], _LPC:[AR] ) = ()
 #with code %{ 
 Printf.fprintf stderr "LPC(%d) " (int_of_bits _LPC);
 Printf.fprintf stderr "pc_out(%d)\n" (int_of_bits pc_out);

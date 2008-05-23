@@ -4,6 +4,10 @@
 // 'Call me Back to the SubLeq Machine my 4004'	          //
 // =======================================================//
 
+// inclure la net-list de la machine SUBLEQ
+#include <stdlib.bop>
+#include "../HASM/hasm.bop"
+
 #define AR 4 // Architecture à AR bits
 
 #define HASM 1
@@ -15,13 +19,12 @@
 #define NMACHINE "troene"
 #define NPORT 1400
 
-
 #define ENREZO 6
 
 #define MACHINE "totem"
 #define PORT 2400
 
-#define SUB_CONTROLLER ENREZO // SSMC NSSMC
+#define SUB_CONTROLLER SSMC // SSMC NSSMC
 
 // Registre sur N bits : le design a un beau cycle sinon !
 // Par exemple, on peut decider que le controller a un cycle d'avance
@@ -48,9 +51,12 @@ SUBLEQ_HASM
 	= ( pc_out:[AR], data_out:[AR] )
 where
 	// Premiere version : HASM Hardware Architecture for a SubLeq Machine
-	pc_out:[AR], data_out:[AR] =
-	pipe("bopsimu hasm.bop -p",
-		clk_in, run, set_pc, pc_in:[AR], write, read_adress:[AR], write_adress:[AR], data_in:[AR]);
+//	pc_out:[AR], data_out:[AR] =
+//	pipe("bopsimu hasm.bop -p",
+//		clk_in, run, set_pc, pc_in:[AR], write, read_adress:[AR], write_adress:[AR], data_in:[AR]);
+
+	pc_out:[AR], data_out:[AR] = 
+	SUBLEQ(clk_in, run, set_pc, pc_in:[AR], write, read_adress:[AR], write_adress:[AR], data_in:[AR]);
 end where;
 
 // ====================================================== //
@@ -136,6 +142,7 @@ end where;
 // ====================================================== //
 
 // FirstTest = RAM_EXTERNE + SUBLEQ_HASM + SUBLEQ_CONTROLLER_SSMC
+// Avec un init tous les 100 cycles
 
 FirstTest (RESET_ext) = ()
 where
@@ -153,4 +160,10 @@ where
 		SL_write, SL_read_adress:[AR], SL_write_adress:[AR], SL_data_in:[AR],
 	RP_read_adress:[AR], RP_write_adress:[AR], RP_write, RP_data_in:[AR], NOTHING = SUBLEQ_CONTROLLER
 		( clk_in, RESET, SL_pc_out:[AR], SL_data_out:[AR], RP_data_out:[AR] );
+end where;
+
+Demo () = ()
+where
+	click = pipe("./input.bpix");
+	= FirstTest(click);
 end where;

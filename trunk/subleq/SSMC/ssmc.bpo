@@ -32,7 +32,7 @@
 
 #pipe SSMC
 	// ENTREES
-	clk_in, _RESET, _SL_pc_out:[AR], _SL_data_out:[AR], _RP_data_out:[AR] =
+	( clk_in, _RESET, _SL_pc_out:[AR], _SL_data_out:[AR], _RP_data_out:[AR] ) =
 	// SORTIES
 	_SL_clk_in, _SL_run, 
 		_SL_set_pc, _SL_pc_in:[AR], 
